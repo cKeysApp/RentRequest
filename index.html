@@ -643,7 +643,12 @@
     function openModal(id){
       document.getElementById(id).classList.add("show");
       document.body.style.overflow = "hidden";
+    
+      if (id === "giveRentModal") {
+        loadDemandCards(30);
+      }
     }
+    
     function closeModal(id){
       document.getElementById(id).classList.remove("show");
       document.body.style.overflow = "";
@@ -830,36 +835,72 @@
       .catch(() => alert("Submission failed. Please try again."));
     });
 
-    /* ===== Demand cards (sample for now) ===== */
-    const sampleDemand = [
-      { state:"Selangor", city:"Petaling Jaya", budget:"500 - 1000", type:"Room", moveIn:"2026-03-01", needs:["Furnished","Parking"] },
-      { state:"Johor", city:"Johor Baharu", budget:"1200 - 1800", type:"Apartment", moveIn:"2026-02-20", needs:["Washing machine"] },
-      { state:"Penang", city:"Bayan Lepas", budget:"800 - 1400", type:"Room", moveIn:"2026-02-28", needs:["Near bus"] },
-    ];
-
-    function renderDemandCards(list){
+    /* ===== Demand cards ===== */
+    // ===== Load Tenant Demand from Google Sheet (JSONP) =====
+    function loadDemandCards(limit = 30) {
       const el = document.getElementById("demandCards");
-      el.innerHTML = "";
-      list.forEach((d) => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = `
-          <div class="meta">
-            <span>${d.state} • ${d.city}</span>
-            <span>${d.type}</span>
-          </div>
-          <strong>Budget: RM ${d.budget}</strong>
-          <div style="margin-top:6px;color:#444;font-size:13px;">
-            Move-in: ${d.moveIn || "-"}
-          </div>
-          <div style="margin-top:8px;">
-            ${(d.needs||[]).map(n => `<span class="pill">${n}</span>`).join("")}
-          </div>
-        `;
-        el.appendChild(div);
-      });
+      el.innerHTML = "Loading...";
+    
+      // unique callback name each time
+      const cbName = "demandCb_" + Date.now();
+    
+      window[cbName] = function(payload) {
+        try {
+          if (!payload || !payload.ok) {
+            el.innerHTML = "Failed to load data.";
+            return;
+          }
+    
+          const rows = payload.rows || [];
+          if (rows.length === 0) {
+            el.innerHTML = "No requests yet.";
+            return;
+          }
+    
+          el.innerHTML = "";
+          rows.forEach((d) => {
+            const needsArr = (d.needs || "").split(",").map(s => s.trim()).filter(Boolean);
+    
+            const div = document.createElement("div");
+            div.className = "card";
+            div.innerHTML = `
+              <div class="meta">
+                <span>${d.state || "-"} • ${d.city || "-"}</span>
+                <span>${d.propertyType || "-"}</span>
+              </div>
+              <strong>Budget: RM ${d.budget || "-"}</strong>
+              <div style="margin-top:6px;color:#444;font-size:13px;">
+                Move-in: ${d.moveInDate || "-"} • People: ${d.people || "-"}
+              </div>
+              <div style="margin-top:6px;color:#444;font-size:13px;">
+                Duration: ${d.duration || "-"} • Occupation: ${d.occupation || "-"}
+              </div>
+              <div style="margin-top:8px;">
+                ${needsArr.map(n => `<span class="pill">${n}</span>`).join("")}
+              </div>
+            `;
+            el.appendChild(div);
+          });
+        } finally {
+          // cleanup callback
+          delete window[cbName];
+        }
+      };
+    
+      // inject script tag (JSONP)
+      const script = document.createElement("script");
+      script.src = `${SCRIPT_URL}?action=list&limit=${limit}&callback=${cbName}`;
+      script.onerror = () => {
+        el.innerHTML = "Failed to load. Check Apps Script deployment access.";
+        delete window[cbName];
+      };
+    
+      document.body.appendChild(script);
+    
+      // remove script tag after load to keep DOM clean
+      script.onload = () => script.remove();
     }
-    renderDemandCards(sampleDemand);
+
   </script>
 </body>
 </html>
