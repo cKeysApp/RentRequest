@@ -124,7 +124,7 @@ document.getElementById("requestForm").addEventListener("submit", function(e) {
   formData.lng = selectedLng;
   formData.radius = selectedRadius;
 
-  fetch("YOUR_SCRIPT_URL", {
+  fetch("https://script.google.com/macros/s/AKfycbwYAFv1nRhf9ATD-7XF_Z9Mg_anb2oj2i3rQ4g7vVqHg-kTX7ncN8yjNfUxn5I5CRDq/exec", {
     method: "POST",
     body: JSON.stringify(formData)
   })
