@@ -1,282 +1,574 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Find Rental | Tenant Request</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
+    :root{
+      --bg:#f5f7fa;
+      --card:#ffffff;
+      --text:#111;
+      --muted:#666;
+      --border:#e6e9ef;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --green:#28a745;
+      --green2:#218838;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
       font-family: Arial, sans-serif;
-      background: #f5f7fa;
-      margin: 0;
-      padding: 20px;
+      background: var(--bg);
+      color: var(--text);
     }
 
-    .container {
+    /* ===== Top bar ===== */
+    .topbar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:14px 16px;
+      position: sticky;
+      top:0;
+      background: rgba(245,247,250,.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+    .hamburger{
+      width:42px; height:42px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      box-shadow: 0 6px 16px rgba(0,0,0,.05);
+    }
+    .hamburger span{
+      display:block;
+      width:18px; height:2px;
+      background:#222;
+      position:relative;
+    }
+    .hamburger span::before,
+    .hamburger span::after{
+      content:"";
+      position:absolute;
+      left:0;
+      width:18px; height:2px;
+      background:#222;
+    }
+    .hamburger span::before{ top:-6px; }
+    .hamburger span::after{ top:6px; }
+
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+    .logo-badge{
+      width:34px; height:34px;
+      border-radius:10px;
+      background:#111;
+      color:#fff;
+      display:grid;
+      place-items:center;
+      font-size:14px;
+    }
+    .logo small{
+      display:block;
+      font-weight:600;
+      color: var(--muted);
+      margin-top:2px;
+      letter-spacing:0;
+    }
+
+    /* ===== Menu drawer ===== */
+    .drawer{
+      position:fixed;
+      top:0; left:0;
+      width: 280px;
+      height: 100%;
+      background:#fff;
+      box-shadow: var(--shadow);
+      border-right:1px solid var(--border);
+      transform: translateX(-110%);
+      transition: transform .25s ease;
+      z-index: 20;
+      padding: 16px;
+    }
+    .drawer.open{ transform: translateX(0); }
+    .drawer h3{ margin: 10px 0 6px; }
+    .drawer a{
+      display:block;
+      padding:10px 10px;
+      border-radius:10px;
+      color:#111;
+      text-decoration:none;
+      margin:6px 0;
+      border:1px solid var(--border);
+    }
+    .drawer a:hover{ background: var(--bg); }
+    .backdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.35);
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .2s ease;
+      z-index: 15;
+    }
+    .backdrop.show{
+      opacity:1;
+      pointer-events:auto;
+    }
+
+    /* ===== Main hero ===== */
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 26px 16px 40px;
+    }
+    .hero{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 26px 18px;
+      text-align:center;
+    }
+    .hero h1{
+      margin:0;
+      font-size: 28px;
+    }
+    .hero p{
+      margin:10px auto 18px;
       max-width: 520px;
-      margin: auto;
-      background: #ffffff;
-      padding: 25px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      color: var(--muted);
+      line-height:1.4;
+    }
+    .actions{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .btn{
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      cursor:pointer;
+      font-weight:700;
+      font-size: 14px;
+      background:#fff;
+      box-shadow: 0 6px 16px rgba(0,0,0,.05);
+      min-width: 140px;
+    }
+    .btn.primary{
+      background: var(--green);
+      border-color: var(--green);
+      color:#fff;
+    }
+    .btn.primary:hover{ background: var(--green2); }
+    .btn:hover{ background: var(--bg); }
+
+    /* ===== Benefits ===== */
+    .section-title{
+      text-align:center;
+      margin: 22px 0 10px;
+      font-size: 18px;
+      font-weight: 800;
+      color:#222;
+    }
+    .benefits{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .panel{
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.05);
+    }
+    .panel h3{
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .panel ul{
+      margin:0;
+      padding-left: 18px;
+      color: #333;
+      line-height: 1.6;
     }
 
-    h2 {
-      text-align: center;
-      margin-bottom: 5px;
+    /* ===== Modal ===== */
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index: 30;
+      padding: 16px;
+    }
+    .modal.show{ display:flex; }
+    .modal .overlay{
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,.45);
+    }
+    .modal .box{
+      position:relative;
+      width: min(620px, 100%);
+      background:#fff;
+      border-radius: 16px;
+      border:1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      max-height: 88vh;
+      overflow:auto;
+    }
+    .modal .box header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .modal .box header h2{
+      margin:0;
+      font-size: 18px;
+    }
+    .close{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: 10px;
+      padding: 8px 10px;
+      cursor:pointer;
+      font-weight:800;
     }
 
-    p {
-      text-align: center;
-      color: #666;
-      margin-bottom: 20px;
-    }
-
-    input, select {
-      width: 100%;
+    /* ===== Form styles (reuse yours) ===== */
+    label{ font-size: 13px; font-weight: 700; }
+    input, select{
+      width:100%;
       padding: 12px;
       margin-top: 6px;
       margin-bottom: 14px;
       border: 1px solid #ccc;
-      border-radius: 6px;
+      border-radius: 10px;
       font-size: 14px;
-      box-sizing: border-box;
+    }
+    .success{
+      text-align:center;
+      color: var(--green2);
+      margin-top: 10px;
+      display:none;
+      font-weight:700;
     }
 
-    label {
-      font-size: 14px;
-      font-weight: bold;
+    /* ===== Demand cards ===== */
+    .cards{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .card{
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fff;
+    }
+    .card .meta{
+      display:flex;
+      justify-content:space-between;
+      gap: 8px;
+      flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .card strong{ font-size: 14px; }
+    .pill{
+      display:inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      margin: 4px 6px 0 0;
     }
 
-    button {
-      width: 100%;
-      padding: 14px;
-      background: #28a745;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      cursor: pointer;
+    @media (max-width: 780px){
+      .benefits{ grid-template-columns: 1fr; }
+      .hero h1{ font-size: 24px; }
     }
-
-    button:hover {
-      background: #218838;
-    }
-
-    .success {
-      text-align: center;
-      color: green;
-      margin-top: 15px;
-      display: none;
-    }
-
-    .budget-wrap { margin-bottom: 14px; }
-
-    .budget-values {
-      display: flex;
-      justify-content: center;
-      margin: 8px 0 10px;
-      font-weight: bold;
-      color: #222;
-    }
-    
-    .range-group {
-      position: relative;
-      height: 34px;
-    }
-    
-    .range-group input[type="range"]{
-      position: absolute;
-      left: 0;
-      top: 0;
-      margin: 0;
-      width: 100%;
-      height: 34px;
-      background: transparent;
-      pointer-events: none; /* important: we enable per-thumb below */
-    }
-    
-    /* allow interaction */
-    .range-group input[type="range"]::-webkit-slider-thumb{
-      pointer-events: auto;
-    }
-    .range-group input[type="range"]::-moz-range-thumb{
-      pointer-events: auto;
-    }
-
   </style>
 </head>
+
 <body>
+  <!-- Drawer + backdrop -->
+  <div class="drawer" id="drawer">
+    <h3>Menu</h3>
+    <a href="#home" onclick="toggleDrawer(false)">Home</a>
+    <a href="#benefits" onclick="toggleDrawer(false)">Benefits</a>
+    <a href="javascript:void(0)" onclick="openModal('requestModal'); toggleDrawer(false)">Request Rental</a>
+    <a href="javascript:void(0)" onclick="openModal('giveRentModal'); toggleDrawer(false)">Give Rent</a>
+  </div>
+  <div class="backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
 
-<div class="container">
+  <!-- Topbar -->
+  <div class="topbar" id="home">
+    <button class="hamburger" aria-label="menu" onclick="toggleDrawer(true)">
+      <span></span>
+    </button>
 
-<h2>Looking for a Place to Rent?</h2>
-<p>Submit your request and we will match you with available landlords.</p>
-
-<form id="requestForm">
-
-<label>Full Name</label>
-<input name="name" required>
-
-<label>Email</label>
-<input name="email">
-
-<label>Phone / WhatsApp</label>
-<input name="phone" required>
-
-<label>Property Type</label>
-<select name="propertyType" required>
-  <option value="">Select Property Type</option>
-  <option>Room</option>
-  <option>Apartment</option>
-  <option>House</option>
-</select>
-
-<label>State</label>
-<select id="state" name="state" required>
-  <option value="">Select State</option>
-  <option>Johor</option>
-  <option>Kedah</option>
-  <option>Kelantan</option>
-  <option>Melaka</option>
-  <option>Negeri Sembilan</option>
-  <option>Pahang</option>
-  <option>Penang</option>
-  <option>Perak</option>
-  <option>Perlis</option>
-  <option>Sabah</option>
-  <option>Sarawak</option>
-  <option>Selangor</option>
-
-</select>
-
-<label>City / Town</label>
-<select id="city" name="city" required>
-  <option value="">Select City</option>
-</select>
-
-<label>Budget (RM)</label>
-
-<div class="budget-wrap">
-  <div class="budget-values">
-    <span id="budgetText">RM 500 – RM 1500</span>
+    <div class="logo">
+      <div class="logo-badge">FR</div>
+      <div>
+        Find Rental
+        <small>Tenant ↔ Landlord matching</small>
+      </div>
+    </div>
   </div>
 
-  <div class="range-group">
-    <input id="minBudget" type="range" min="0" max="5000" step="50" value="500">
-    <input id="maxBudget" type="range" min="0" max="5000" step="50" value="1500">
+  <!-- Main content -->
+  <div class="wrap">
+    <div class="hero">
+      <h1>Where is it?</h1>
+      <p>Submit your request — we’ll help you find one. Or if you have a unit, view tenant demand and offer rent.</p>
+
+      <div class="actions">
+        <button class="btn primary" onclick="openModal('requestModal')">REQUEST</button>
+        <button class="btn" onclick="openModal('giveRentModal')">GIVE RENT</button>
+      </div>
+    </div>
+
+    <div class="section-title" id="benefits">Benefit</div>
+
+    <div class="benefits">
+      <div class="panel">
+        <h3>FOR TENANT</h3>
+        <ul>
+          <li>Submit once — faster search</li>
+          <li>Get matched to available landlords</li>
+          <li>Filter by location & budget</li>
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>FOR LANDLORD</h3>
+        <ul>
+          <li>See real tenant demand</li>
+          <li>Find tenants faster (less vacancy)</li>
+          <li>Target the right budget & area</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
-  <!-- This keeps your backend exactly the same -->
-  <input type="hidden" name="budget" id="budgetHidden" value="500 - 1500">
-</div>
+  <!-- ===================== REQUEST MODAL (your form) ===================== -->
+  <div class="modal" id="requestModal">
+    <div class="overlay" onclick="closeModal('requestModal')"></div>
+    <div class="box">
+      <header>
+        <h2>Tenant Request</h2>
+        <button class="close" onclick="closeModal('requestModal')">✕</button>
+      </header>
 
-<label>Move-in Date</label>
-<input name="moveInDate" type="date">
+      <form id="requestForm">
+        <label>Full Name</label>
+        <input name="name" required>
 
-<label>Duration (months)</label>
-<input name="duration">
+        <label>Email</label>
+        <input name="email">
 
-<label>Occupation</label>
-<input name="occupation">
+        <label>Phone / WhatsApp</label>
+        <input name="phone" required>
 
-<label>Number of People</label>
-<input name="people">
+        <label>Property Type</label>
+        <select name="propertyType" required>
+          <option value="">Select Property Type</option>
+          <option>Room</option>
+          <option>Apartment</option>
+          <option>House</option>
+        </select>
 
-<label>Extra Needs</label>
-<input name="needs" placeholder="Washing machine, parking, furnished, etc">
+        <label>State</label>
+        <select id="state" name="state" required>
+          <option value="">Select State</option>
+          <option>Johor</option>
+          <option>Kedah</option>
+          <option>Kelantan</option>
+          <option>Melaka</option>
+          <option>Negeri Sembilan</option>
+          <option>Pahang</option>
+          <option>Penang</option>
+          <option>Perak</option>
+          <option>Perlis</option>
+          <option>Sabah</option>
+          <option>Sarawak</option>
+          <option>Selangor</option>
+        </select>
 
-<button type="submit">Submit Request</button>
+        <label>City / Town</label>
+        <select id="city" name="city" required>
+          <option value="">Select City</option>
+        </select>
 
-</form>
+        <label>Budget (RM)</label>
+        <input name="budget" placeholder="Example: 500 - 1000">
 
-<div class="success" id="successMsg">
-Request submitted successfully!
-</div>
+        <label>Move-in Date</label>
+        <input name="moveInDate" type="date">
 
-</div>
+        <label>Duration (months)</label>
+        <input name="duration">
 
-<script>
-// City options by state
-const cityOptions = {
-  "Johor": ["Kluang", "Kulai", "Tangkak", "Masai", "Parit Jawa", "Batu Pahat", "Ulu Tiram", "Mersing", "Johor Baharu", "Kota Tinggi"],
-  "Kedah": ["Alor Setar", "Langkawi", "Sungai Petan", "Baling", "Changloon", "Kodiang", "Jitra", "Kulim", "Pendang", "Serdang"],
-  "Kelantan": ["Kota Bharu", "Dabong", "Jelawat", "Ketereh", "Kuala Krai", "Kubang Kerian", "Machang", "Pasir Mas", "Pengkalan Chepa", "Pengkalan Kubor", "Pengkalan Pasir", "Perupok", "Wakaf Bharu", "Wakaf Che Yeh"], 
-  "Melaka": ["Ayer Keroh", "Alor Gajah", "Asahan", "Ayer Paabas", "Batu Berendam", "Bemban", "Jasin", "Klebang", "Lendu, Alor Gajah", "Lubuk China", "Machap Baru", "Paya Rumput", "Pokok Mangga", "Simpang Ampat", "Telok Gong", "Telok Mas"],
-  "Negeri Sembilan": ["Air Kuning Selatan", "Ampang Tinggi", "Bahau", "Bandar Baru Nilai", "Bandar Seri Jempol", "Batang Benar", "Batu Kikir", "Gemas", "Kota", "Kuala Pilah", "Kuala Sawah", "Lukut", "Mambau", "Nilai", "Pajam", "Pasir Panjang", "Pengkalan Kempas", "Port Dickson", "Rembau", "Rompin", "Senawang", "Seremban 2", "Seremban 3", "Seri Menanti", "Serting", "Sikamat", "Siliau", "Simpang Durian", "Simpang Pertang", "Sungai Gadut", "Sungai Muntoh", "Tampin", "Tanjung Ipoh", "Teluk Kemang", "Tiroi"],
-  "Pahang": ["Bandar Bera", "Bandar Muadzam Shah", "Bandar Tun Razak", "Batu Hitam", "Batu Talam", "Belimbing", "Benta", "Bentong", "Beserah", "Blue Valley", "Brinchang", "Bukit Ibam", "Bukit Tinggi", "Chendor", "Chenor", "Cherating", "FELDA Sebertak", "Fraser's Hill", "Gambang", "Gebeng", "Genting Highlands", "Genting Sempah", "Gohtong Jaya", "Jerantut", "Karak", "Kemayan", "Kerdau", "Ketari", "Kota Shahbandar", "Kuala Lipis", "Kuala Pahang", "Kuala Rompin", "Kuala Semantan", "Kuala Simpang", "Kuala Tembeling", "Lanchang", "Lubuk Paku", "Lurah Bilut", "Maran", "Mengkarak", "Mentakab", "Merapoh", "Nenasi", "Paloh Hinai", "Pekan", "Penor", "Raub", "Ringlet", "Sungai Lembing", "Sungai Ruan", "Tanah Rata", "Tanjung Lumpur", "Teluk Cempedak", "Temerloh", "Teriang", "Tringkap"],
-  "Penang": ["Bukit Mertajam", "Balik Pulau", "Batu Kawan", "Bayan Lepas", "Bukit Tambun", "Butterworth", "Gertak Sanggul", "Butterworth", "Kepala Batas", "Mak Mandin", "Nibong Tebal", "Penanti", "Perai", "Permatang Pauh", "Pinang Tunggal", "Simpang Ampat", "Tasek Gelugor", "Teluk Air Tawar", "Teluk Bahang", "Teluk Kumbar", "Val d'Or"],
-  "Perak": ["Sungai Siput", "Ipoh", "Taiping", "Gopeng", "Gerik", "Chemor", "Lumut", "Simpang Ampat Semanggol", "Kuala Kangsar", "Tanjong Malim"],
-  "Perlis": ["Kangar", "Padang Besar", "Kaki Bukit", "Kuala Perlis"],
-  "Sabah": ["Ranau", "Kota Kinabalu", "Sandakan", "Tamparuli", "Tuaran", "Penampang", "Lahad Datu", "Semporna", "Tawau", "Kota Belud"],
-  "Sarawak": ["Miri", "Kuching", "Niah", "Bau", "Nanga Medamit", "Bintulu", "Kota Samarahan", "Sibu", "Limbang", "Lundu"],
-  "Selangor": ["Petaling Jaya", "Shah Alam", "Ampang", "Rawang", "Gombak", "Semenyih", "Hulu Langat", "Ampang Jaya", "Seri Kembangan", "Kuala Kubu Bharu"],
-};
+        <label>Occupation</label>
+        <input name="occupation">
 
-// Update city dropdown when state changes
-document.getElementById("state").addEventListener("change", function() {
-  const state = this.value;
-  const citySelect = document.getElementById("city");
+        <label>Number of People</label>
+        <input name="people">
 
-  citySelect.innerHTML = "<option value=''>Select City</option>";
+        <label>Extra Needs</label>
+        <input name="needs" placeholder="Washing machine, parking, furnished, etc">
 
-  if (cityOptions[state]) {
-    cityOptions[state].forEach(city => {
-      const option = document.createElement("option");
-      option.value = city;
-      option.textContent = city;
-      citySelect.appendChild(option);
+        <button class="btn primary" type="submit">Submit Request</button>
+      </form>
+
+      <div class="success" id="successMsg">Request submitted successfully!</div>
+    </div>
+  </div>
+
+  <!-- ===================== GIVE RENT MODAL (demand cards) ===================== -->
+  <div class="modal" id="giveRentModal">
+    <div class="overlay" onclick="closeModal('giveRentModal')"></div>
+    <div class="box">
+      <header>
+        <h2>Tenant Demand</h2>
+        <button class="close" onclick="closeModal('giveRentModal')">✕</button>
+      </header>
+
+      <p style="margin:0;color:#666;line-height:1.4;">
+        This shows requests as cards. (Now: sample cards.)  
+        Next step: connect this to your Google Sheet so it auto-updates.
+      </p>
+
+      <div class="cards" id="demandCards"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ===== Drawer ===== */
+    const drawer = document.getElementById("drawer");
+    const drawerBackdrop = document.getElementById("drawerBackdrop");
+    function toggleDrawer(open){
+      drawer.classList.toggle("open", !!open);
+      drawerBackdrop.classList.toggle("show", !!open);
+    }
+
+    /* ===== Modals ===== */
+    function openModal(id){
+      document.getElementById(id).classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+    function closeModal(id){
+      document.getElementById(id).classList.remove("show");
+      document.body.style.overflow = "";
+    }
+
+    /* ===== City options by state (your data) ===== */
+    const cityOptions = {
+      "Johor": ["Kluang", "Kulai", "Tangkak", "Masai", "Parit Jawa", "Batu Pahat", "Ulu Tiram", "Mersing", "Johor Baharu", "Kota Tinggi"],
+      "Kedah": ["Alor Setar", "Langkawi", "Sungai Petan", "Baling", "Changloon", "Kodiang", "Jitra", "Kulim", "Pendang", "Serdang"],
+      "Kelantan": ["Kota Bharu", "Dabong", "Jelawat", "Ketereh", "Kuala Krai", "Kubang Kerian", "Machang", "Pasir Mas", "Pengkalan Chepa", "Pengkalan Kubor", "Pengkalan Pasir", "Perupok", "Wakaf Bharu", "Wakaf Che Yeh"],
+      "Melaka": ["Ayer Keroh", "Alor Gajah", "Asahan", "Ayer Paabas", "Batu Berendam", "Bemban", "Jasin", "Klebang", "Lendu, Alor Gajah", "Lubuk China", "Machap Baru", "Paya Rumput", "Pokok Mangga", "Simpang Ampat", "Telok Gong", "Telok Mas"],
+      "Negeri Sembilan": ["Air Kuning Selatan", "Ampang Tinggi", "Bahau", "Bandar Baru Nilai", "Bandar Seri Jempol", "Batang Benar", "Batu Kikir", "Gemas", "Kota", "Kuala Pilah", "Kuala Sawah", "Lukut", "Mambau", "Nilai", "Pajam", "Pasir Panjang", "Pengkalan Kempas", "Port Dickson", "Rembau", "Rompin", "Senawang", "Seremban 2", "Seremban 3", "Seri Menanti", "Serting", "Sikamat", "Siliau", "Simpang Durian", "Simpang Pertang", "Sungai Gadut", "Sungai Muntoh", "Tampin", "Tanjung Ipoh", "Teluk Kemang", "Tiroi"],
+      "Pahang": ["Bandar Bera", "Bandar Muadzam Shah", "Bandar Tun Razak", "Bentong", "Gambang", "Gebeng", "Genting Highlands", "Jerantut", "Karak", "Kuantan", "Mentakab", "Pekan", "Raub", "Tanah Rata", "Temerloh"],
+      "Penang": ["Bukit Mertajam", "Balik Pulau", "Batu Kawan", "Bayan Lepas", "Butterworth", "Kepala Batas", "Nibong Tebal", "Perai", "Permatang Pauh", "Simpang Ampat", "Tasek Gelugor"],
+      "Perak": ["Sungai Siput", "Ipoh", "Taiping", "Gopeng", "Gerik", "Chemor", "Lumut", "Kuala Kangsar", "Tanjong Malim"],
+      "Perlis": ["Kangar", "Padang Besar", "Kaki Bukit", "Kuala Perlis"],
+      "Sabah": ["Ranau", "Kota Kinabalu", "Sandakan", "Tamparuli", "Tuaran", "Penampang", "Lahad Datu", "Semporna", "Tawau", "Kota Belud"],
+      "Sarawak": ["Miri", "Kuching", "Niah", "Bau", "Bintulu", "Kota Samarahan", "Sibu", "Limbang", "Lundu"],
+      "Selangor": ["Petaling Jaya", "Shah Alam", "Ampang", "Rawang", "Gombak", "Semenyih", "Hulu Langat", "Ampang Jaya", "Seri Kembangan", "Kuala Kubu Bharu"],
+    };
+
+    document.getElementById("state").addEventListener("change", function() {
+      const state = this.value;
+      const citySelect = document.getElementById("city");
+      citySelect.innerHTML = "<option value=''>Select City</option>";
+
+      if (cityOptions[state]) {
+        cityOptions[state].forEach(city => {
+          const option = document.createElement("option");
+          option.value = city;
+          option.textContent = city;
+          citySelect.appendChild(option);
+        });
+      }
     });
-  }
-});
-// Budget slider (min/max)
-const minSlider = document.getElementById("minBudget");
-const maxSlider = document.getElementById("maxBudget");
-const budgetText = document.getElementById("budgetText");
-const budgetHidden = document.getElementById("budgetHidden");
 
-function formatRM(n) {
-  return "RM " + Number(n).toLocaleString("en-MY");
-}
+    /* ===== Submit form to your Google Apps Script (unchanged) ===== */
+    document.getElementById("requestForm").addEventListener("submit", function(e) {
+      e.preventDefault();
 
-function syncBudget() {
-  let minVal = Number(minSlider.value);
-  let maxVal = Number(maxSlider.value);
+      const form = this;
+      const data = Object.fromEntries(new FormData(form).entries());
 
-  // prevent crossing
-  if (minVal > maxVal) {
-    [minVal, maxVal] = [maxVal, minVal];
-  }
+      fetch("https://script.google.com/macros/s/AKfycbzFCOUoIXtEKeyRZd6jvABcgu-pRT4Ju3AdnyXv0ZjjDOpzC1Wc0ZFGaW533ENNiLpb/exec", {
+        method: "POST",
+        body: JSON.stringify(data)
+      })
+      .then(res => res.text())
+      .then(() => {
+        document.getElementById("successMsg").style.display = "block";
+        form.reset();
+        setTimeout(() => document.getElementById("successMsg").style.display = "none", 2500);
+      })
+      .catch(() => alert("Submission failed. Please try again."));
+    });
 
-  budgetText.textContent = `${formatRM(minVal)} – ${formatRM(maxVal)}`;
-  budgetHidden.value = `${minVal} - ${maxVal}`;
-}
+    /* ===== Demand cards (sample for now) ===== */
+    const sampleDemand = [
+      { state:"Selangor", city:"Petaling Jaya", budget:"500 - 1000", type:"Room", moveIn:"2026-03-01", needs:["Furnished","Parking"] },
+      { state:"Johor", city:"Johor Baharu", budget:"1200 - 1800", type:"Apartment", moveIn:"2026-02-20", needs:["Washing machine"] },
+      { state:"Penang", city:"Bayan Lepas", budget:"800 - 1400", type:"Room", moveIn:"2026-02-28", needs:["Near bus"] },
+    ];
 
-minSlider.addEventListener("input", syncBudget);
-maxSlider.addEventListener("input", syncBudget);
-syncBudget();
-
-// Submit form to Google Apps Script
-document.getElementById("requestForm").addEventListener("submit", function(e) {
-  e.preventDefault();
-
-  const form = this;
-  const data = Object.fromEntries(new FormData(form).entries());
-
-  fetch("https://script.google.com/macros/s/AKfycbzFCOUoIXtEKeyRZd6jvABcgu-pRT4Ju3AdnyXv0ZjjDOpzC1Wc0ZFGaW533ENNiLpb/exec", {
-    method: "POST",
-    body: JSON.stringify(data)
-  })
-  .then(res => res.text())
-  .then(() => {
-    document.getElementById("successMsg").style.display = "block";
-    form.reset();
-  })
-  .catch(() => {
-    alert("Submission failed. Please try again.");
-  });
-});
-</script>
-
+    function renderDemandCards(list){
+      const el = document.getElementById("demandCards");
+      el.innerHTML = "";
+      list.forEach((d) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <div class="meta">
+            <span>${d.state} • ${d.city}</span>
+            <span>${d.type}</span>
+          </div>
+          <strong>Budget: RM ${d.budget}</strong>
+          <div style="margin-top:6px;color:#444;font-size:13px;">
+            Move-in: ${d.moveIn || "-"}
+          </div>
+          <div style="margin-top:8px;">
+            ${(d.needs||[]).map(n => `<span class="pill">${n}</span>`).join("")}
+          </div>
+        `;
+        el.appendChild(div);
+      });
+    }
+    renderDemandCards(sampleDemand);
+  </script>
 </body>
 </html>
