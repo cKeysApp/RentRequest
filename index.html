@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Find Rental | Tenant Request</title>
+  <title>Find Rental | Home</title>
 
   <style>
     :root{
@@ -23,6 +23,7 @@
       font-family: Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
+      padding: 0;
     }
 
     /* ===== Top bar ===== */
@@ -257,23 +258,66 @@
       font-weight:800;
     }
 
-    /* ===== Form styles (reuse yours) ===== */
-    label{ font-size: 13px; font-weight: 700; }
+    /* ===== Form styles ===== */
+    label{ font-size: 14px; font-weight: bold; }
     input, select{
       width:100%;
       padding: 12px;
       margin-top: 6px;
       margin-bottom: 14px;
       border: 1px solid #ccc;
-      border-radius: 10px;
+      border-radius: 6px;
       font-size: 14px;
+      box-sizing: border-box;
     }
+    button[type="submit"]{
+      width: 100%;
+      padding: 14px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover{ background:#218838; }
+
     .success{
       text-align:center;
-      color: var(--green2);
-      margin-top: 10px;
+      color: green;
+      margin-top: 12px;
       display:none;
       font-weight:700;
+    }
+
+    /* ===== Your working budget slider styles ===== */
+    .budget-wrap { margin-bottom: 14px; }
+    .budget-values {
+      display: flex;
+      justify-content: center;
+      margin: 8px 0 10px;
+      font-weight: bold;
+      color: #222;
+    }
+    .range-group {
+      position: relative;
+      height: 34px;
+    }
+    .range-group input[type="range"]{
+      position: absolute;
+      left: 0;
+      top: 0;
+      margin: 0;
+      width: 100%;
+      height: 34px;
+      background: transparent;
+      pointer-events: none;
+    }
+    .range-group input[type="range"]::-webkit-slider-thumb{
+      pointer-events: auto;
+    }
+    .range-group input[type="range"]::-moz-range-thumb{
+      pointer-events: auto;
     }
 
     /* ===== Demand cards ===== */
@@ -377,7 +421,7 @@
     </div>
   </div>
 
-  <!-- ===================== REQUEST MODAL (your form) ===================== -->
+  <!-- ===================== REQUEST MODAL (form + slider) ===================== -->
   <div class="modal" id="requestModal">
     <div class="overlay" onclick="closeModal('requestModal')"></div>
     <div class="box">
@@ -427,7 +471,18 @@
         </select>
 
         <label>Budget (RM)</label>
-        <input name="budget" placeholder="Example: 500 - 1000">
+        <div class="budget-wrap">
+          <div class="budget-values">
+            <span id="budgetText">RM 500 – RM 1500</span>
+          </div>
+
+          <div class="range-group">
+            <input id="minBudget" type="range" min="0" max="5000" step="50" value="500">
+            <input id="maxBudget" type="range" min="0" max="5000" step="50" value="1500">
+          </div>
+
+          <input type="hidden" name="budget" id="budgetHidden" value="500 - 1500">
+        </div>
 
         <label>Move-in Date</label>
         <input name="moveInDate" type="date">
@@ -444,7 +499,7 @@
         <label>Extra Needs</label>
         <input name="needs" placeholder="Washing machine, parking, furnished, etc">
 
-        <button class="btn primary" type="submit">Submit Request</button>
+        <button type="submit">Submit Request</button>
       </form>
 
       <div class="success" id="successMsg">Request submitted successfully!</div>
@@ -461,8 +516,7 @@
       </header>
 
       <p style="margin:0;color:#666;line-height:1.4;">
-        This shows requests as cards. (Now: sample cards.)  
-        Next step: connect this to your Google Sheet so it auto-updates.
+        Sample demand cards for now. Next step: connect to your Google Sheet to load real requests.
       </p>
 
       <div class="cards" id="demandCards"></div>
@@ -488,7 +542,7 @@
       document.body.style.overflow = "";
     }
 
-    /* ===== City options by state (your data) ===== */
+    /* ===== City options (your data) ===== */
     const cityOptions = {
       "Johor": ["Kluang", "Kulai", "Tangkak", "Masai", "Parit Jawa", "Batu Pahat", "Ulu Tiram", "Mersing", "Johor Baharu", "Kota Tinggi"],
       "Kedah": ["Alor Setar", "Langkawi", "Sungai Petan", "Baling", "Changloon", "Kodiang", "Jitra", "Kulim", "Pendang", "Serdang"],
@@ -519,7 +573,33 @@
       }
     });
 
-    /* ===== Submit form to your Google Apps Script (unchanged) ===== */
+    /* ===== Budget slider (your working code) ===== */
+    const minSlider = document.getElementById("minBudget");
+    const maxSlider = document.getElementById("maxBudget");
+    const budgetText = document.getElementById("budgetText");
+    const budgetHidden = document.getElementById("budgetHidden");
+
+    function formatRM(n) {
+      return "RM " + Number(n).toLocaleString("en-MY");
+    }
+
+    function syncBudget() {
+      let minVal = Number(minSlider.value);
+      let maxVal = Number(maxSlider.value);
+
+      if (minVal > maxVal) {
+        [minVal, maxVal] = [maxVal, minVal];
+      }
+
+      budgetText.textContent = `${formatRM(minVal)} – ${formatRM(maxVal)}`;
+      budgetHidden.value = `${minVal} - ${maxVal}`;
+    }
+
+    minSlider.addEventListener("input", syncBudget);
+    maxSlider.addEventListener("input", syncBudget);
+    syncBudget();
+
+    /* ===== Submit form (unchanged URL) ===== */
     document.getElementById("requestForm").addEventListener("submit", function(e) {
       e.preventDefault();
 
@@ -534,6 +614,12 @@
       .then(() => {
         document.getElementById("successMsg").style.display = "block";
         form.reset();
+
+        // reset slider text after reset
+        minSlider.value = 500;
+        maxSlider.value = 1500;
+        syncBudget();
+
         setTimeout(() => document.getElementById("successMsg").style.display = "none", 2500);
       })
       .catch(() => alert("Submission failed. Please try again."));
