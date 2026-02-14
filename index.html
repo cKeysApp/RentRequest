@@ -282,15 +282,7 @@
     }
     button[type="submit"]:hover{ background:#218838; }
 
-    .success{
-      text-align:center;
-      color: green;
-      margin-top: 12px;
-      display:none;
-      font-weight:700;
-    }
-
-        /* ===== People stepper ===== */
+    /* ===== People stepper ===== */
     .stepper{
       display:flex;
       align-items:center;
@@ -320,7 +312,7 @@
       font-weight:800;
       background:#fff;
     }
-    
+
     /* ===== Needs chips ===== */
     .chips{
       display:flex;
@@ -345,7 +337,7 @@
       width:auto;
       margin:0;
     }
-    
+
     /* ===== Your working budget slider styles ===== */
     .budget-wrap { margin-bottom: 14px; }
     .budget-values {
@@ -407,6 +399,28 @@
       border: 1px solid var(--border);
       font-size: 12px;
       margin: 4px 6px 0 0;
+    }
+
+    /* ===== Submit toast popup ===== */
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(20px);
+      background: #111;
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index: 9999;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
 
     @media (max-width: 780px){
@@ -477,7 +491,7 @@
     </div>
   </div>
 
-  <!-- ===================== REQUEST MODAL (form + slider) ===================== -->
+  <!-- ===================== REQUEST MODAL ===================== -->
   <div class="modal" id="requestModal">
     <div class="overlay" onclick="closeModal('requestModal')"></div>
     <div class="box">
@@ -531,12 +545,10 @@
           <div class="budget-values">
             <span id="budgetText">RM 500 – RM 1500</span>
           </div>
-
           <div class="range-group">
             <input id="minBudget" type="range" min="0" max="5000" step="50" value="500">
             <input id="maxBudget" type="range" min="0" max="5000" step="50" value="1500">
           </div>
-
           <input type="hidden" name="budget" id="budgetHidden" value="500 - 1500">
         </div>
 
@@ -555,7 +567,8 @@
         </select>
 
         <label>Occupation</label>
-        <select name="occupation" required>
+        <!-- NOTE: this select has NO name to avoid duplicate fields -->
+        <select id="occupationSelect" required>
           <option value="">Select occupation</option>
           <option value="Student">Student</option>
           <option value="Worker">Worker</option>
@@ -565,18 +578,23 @@
           <option value="Other">Other</option>
         </select>
 
+        <div id="occupationOtherWrap" style="display:none;">
+          <label>Please specify</label>
+          <input id="occupationOtherInput" type="text" placeholder="Type your occupation">
+        </div>
+
+        <!-- This is the only occupation field that gets submitted -->
+        <input type="hidden" name="occupation" id="occupationHidden" value="">
+
         <label>Number of People</label>
-        
         <div class="stepper">
           <button type="button" class="stepper-btn" id="peopleMinus">−</button>
           <div class="stepper-value" id="peopleValue">1</div>
           <button type="button" class="stepper-btn" id="peoplePlus">+</button>
         </div>
-        
         <input type="hidden" name="people" id="peopleHidden" value="1">
 
         <label>Extra Needs</label>
-        
         <div class="chips" id="needsChips">
           <label class="chip"><input type="checkbox" value="Washing machine"> Washing machine</label>
           <label class="chip"><input type="checkbox" value="Parking"> Parking</label>
@@ -585,18 +603,14 @@
           <label class="chip"><input type="checkbox" value="Air-cond"> Air-cond</label>
           <label class="chip"><input type="checkbox" value="Near MRT/LRT"> Near MRT/LRT</label>
         </div>
-        
-        <!-- keep backend same -->
         <input type="hidden" name="needs" id="needsHidden" value="">
 
         <button type="submit">Submit Request</button>
       </form>
-
-      <div class="success" id="successMsg">Request submitted successfully!</div>
     </div>
   </div>
 
-  <!-- ===================== GIVE RENT MODAL (demand cards) ===================== -->
+  <!-- ===================== GIVE RENT MODAL (sample cards) ===================== -->
   <div class="modal" id="giveRentModal">
     <div class="overlay" onclick="closeModal('giveRentModal')"></div>
     <div class="box">
@@ -612,6 +626,9 @@
       <div class="cards" id="demandCards"></div>
     </div>
   </div>
+
+  <!-- Toast popup -->
+  <div class="toast" id="submitToast">✅ Request submitted successfully!</div>
 
   <script>
     /* ===== Drawer ===== */
@@ -632,7 +649,17 @@
       document.body.style.overflow = "";
     }
 
-    /* ===== City options (your data) ===== */
+    /* ===== Toast ===== */
+    const submitToast = document.getElementById("submitToast");
+    let toastTimer = null;
+    function showToast(msg){
+      submitToast.textContent = msg;
+      submitToast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => submitToast.classList.remove("show"), 2200);
+    }
+
+    /* ===== City options ===== */
     const cityOptions = {
       "Johor": ["Kluang", "Kulai", "Tangkak", "Masai", "Parit Jawa", "Batu Pahat", "Ulu Tiram", "Mersing", "Johor Baharu", "Kota Tinggi"],
       "Kedah": ["Alor Setar", "Langkawi", "Sungai Petan", "Baling", "Changloon", "Kodiang", "Jitra", "Kulim", "Pendang", "Serdang"],
@@ -663,7 +690,7 @@
       }
     });
 
-    /* ===== Budget slider (your working code) ===== */
+    /* ===== Budget slider ===== */
     const minSlider = document.getElementById("minBudget");
     const maxSlider = document.getElementById("maxBudget");
     const budgetText = document.getElementById("budgetText");
@@ -689,73 +716,116 @@
     maxSlider.addEventListener("input", syncBudget);
     syncBudget();
 
-        // ===== People stepper =====
+    /* ===== People stepper ===== */
     const peopleMinus = document.getElementById("peopleMinus");
     const peoplePlus  = document.getElementById("peoplePlus");
     const peopleValue = document.getElementById("peopleValue");
     const peopleHidden = document.getElementById("peopleHidden");
-    
+
     let peopleCount = 1;
-    
+
     function syncPeople(){
       peopleValue.textContent = String(peopleCount);
       peopleHidden.value = String(peopleCount);
     }
-    
+
     peopleMinus.addEventListener("click", () => {
       peopleCount = Math.max(1, peopleCount - 1);
       syncPeople();
     });
-    
+
     peoplePlus.addEventListener("click", () => {
-      peopleCount = Math.min(20, peopleCount + 1); // cap at 20 (you can change)
+      peopleCount = Math.min(20, peopleCount + 1);
       syncPeople();
     });
-    
+
     syncPeople();
-    
-    // ===== Needs chips → hidden field =====
+
+    /* ===== Needs chips → hidden field ===== */
     const needsHidden = document.getElementById("needsHidden");
     const needsChips = document.getElementById("needsChips");
-    
+
     function syncNeeds(){
       const selected = [...needsChips.querySelectorAll("input[type='checkbox']:checked")]
         .map(x => x.value);
       needsHidden.value = selected.join(", ");
     }
-    
+
     needsChips.addEventListener("change", syncNeeds);
     syncNeeds();
 
+    /* ===== Occupation Other logic ===== */
+    const occupationSelect = document.getElementById("occupationSelect");
+    const occupationOtherWrap = document.getElementById("occupationOtherWrap");
+    const occupationOtherInput = document.getElementById("occupationOtherInput");
+    const occupationHidden = document.getElementById("occupationHidden");
+
+    function syncOccupation(){
+      const val = occupationSelect.value;
+      if (val === "Other") {
+        occupationOtherWrap.style.display = "block";
+        occupationHidden.value = (occupationOtherInput.value || "").trim();
+      } else {
+        occupationOtherWrap.style.display = "none";
+        occupationHidden.value = val;
+      }
+    }
+
+    occupationSelect.addEventListener("change", () => {
+      syncOccupation();
+      if (occupationSelect.value === "Other") occupationOtherInput.focus();
+    });
+    occupationOtherInput.addEventListener("input", syncOccupation);
+    syncOccupation();
+
     /* ===== Submit form (unchanged URL) ===== */
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFCOUoIXtEKeyRZd6jvABcgu-pRT4Ju3AdnyXv0ZjjDOpzC1Wc0ZFGaW533ENNiLpb/exec";
+
     document.getElementById("requestForm").addEventListener("submit", function(e) {
       e.preventDefault();
 
       const form = this;
+
+      // make sure hidden occupation is correct before submit
+      syncOccupation();
+
+      // enforce: if Other selected, require text
+      if (occupationSelect.value === "Other" && !occupationHidden.value.trim()) {
+        showToast("Please type your occupation.");
+        occupationOtherInput.focus();
+        return;
+      }
+
       const data = Object.fromEntries(new FormData(form).entries());
 
-      fetch("https://script.google.com/macros/s/AKfycbzFCOUoIXtEKeyRZd6jvABcgu-pRT4Ju3AdnyXv0ZjjDOpzC1Wc0ZFGaW533ENNiLpb/exec", {
+      fetch(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify(data)
       })
       .then(res => res.text())
       .then(() => {
-        document.getElementById("successMsg").style.display = "block";
+        showToast("✅ Request submitted successfully!");
+
         form.reset();
 
-        // reset people + needs after form.reset()
+        // reset occupation
+        occupationOtherWrap.style.display = "none";
+        occupationOtherInput.value = "";
+        syncOccupation();
+
+        // reset people + needs
         peopleCount = 1;
         syncPeople();
-        
         [...needsChips.querySelectorAll("input[type='checkbox']")].forEach(cb => cb.checked = false);
         syncNeeds();
-        
-        // reset slider text after reset
+
+        // reset budget slider
         minSlider.value = 500;
         maxSlider.value = 1500;
         syncBudget();
 
-        setTimeout(() => document.getElementById("successMsg").style.display = "none", 2500);
+        // optional: close modal after submit
+        closeModal("requestModal");
       })
       .catch(() => alert("Submission failed. Please try again."));
     });
