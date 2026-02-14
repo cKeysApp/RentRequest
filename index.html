@@ -41,7 +41,67 @@
   <option>House</option>
 </select>
 
-<input name="location" placeholder="Preferred Location" required>
+<input id="locationInput" placeholder="Type location (e.g. Setapak, KL)" />
+<div id="map" style="height:300px; margin:10px 0;"></div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCQtbofqSeB6HVesl-ItaVwfVpnDDXevXQ&libraries=places"></script>
+
+<script>
+let map, marker, circle;
+let selectedLat = "";
+let selectedLng = "";
+let selectedRadius = 3;
+
+function initMap() {
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 3.1390, lng: 101.6869 }, // KL default
+    zoom: 12
+  });
+
+  const input = document.getElementById("locationInput");
+  const autocomplete = new google.maps.places.Autocomplete(input);
+
+  autocomplete.addListener("place_changed", function () {
+    const place = autocomplete.getPlace();
+    if (!place.geometry) return;
+
+    selectedLat = place.geometry.location.lat();
+    selectedLng = place.geometry.location.lng();
+
+    map.setCenter(place.geometry.location);
+
+    if (marker) marker.setMap(null);
+    if (circle) circle.setMap(null);
+
+    marker = new google.maps.Marker({
+      position: place.geometry.location,
+      map: map,
+      draggable: true
+    });
+
+    circle = new google.maps.Circle({
+      map: map,
+      center: place.geometry.location,
+      radius: selectedRadius * 1000,
+      editable: true,
+      draggable: true
+    });
+
+    // Update values when moved
+    google.maps.event.addListener(circle, 'radius_changed', function() {
+      selectedRadius = (circle.getRadius() / 1000).toFixed(1);
+    });
+
+    google.maps.event.addListener(circle, 'center_changed', function() {
+      selectedLat = circle.getCenter().lat();
+      selectedLng = circle.getCenter().lng();
+    });
+  });
+}
+
+window.onload = initMap;
+</script>
+
 <input name="budget" placeholder="Budget Range (RM)">
 <input name="moveInDate" type="date">
 <input name="duration" placeholder="Duration (months)">
