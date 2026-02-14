@@ -117,19 +117,24 @@ window.onload = initMap;
 document.getElementById("requestForm").addEventListener("submit", function(e) {
   e.preventDefault();
 
-  const data = Object.fromEntries(new FormData(this).entries());
+  const formData = Object.fromEntries(new FormData(this).entries());
 
-  fetch("https://script.google.com/macros/s/AKfycbyPU25409oqSoXf8EmC5ZpTDDMvJWwQc13JMcCoCTHjSbMZrs6oS0QMSUEfCA9dxvg/exec", {
+  formData.locationText = document.getElementById("locationInput").value;
+  formData.lat = selectedLat;
+  formData.lng = selectedLng;
+  formData.radius = selectedRadius;
+
+  fetch("YOUR_SCRIPT_URL", {
     method: "POST",
-    body: JSON.stringify(data)
+    body: JSON.stringify(formData)
   })
   .then(res => res.text())
   .then(msg => {
-    alert("Request submitted successfully!");
-    document.getElementById("requestForm").reset();
-  })
-  .catch(err => alert("Error submitting form"));
+    alert("Request submitted!");
+    this.reset();
+  });
 });
+
 </script>
 
 </body>
