@@ -1,140 +1,202 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Find Rental - Submit Your Request</title>
+  <title>Find Rental | Tenant Request</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
-      font-family: Arial;
-      max-width: 500px;
-      margin: auto;
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
       padding: 20px;
     }
+
+    .container {
+      max-width: 520px;
+      margin: auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    p {
+      text-align: center;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
     input, select {
       width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-    }
-    button {
       padding: 12px;
-      background: green;
+      margin-top: 6px;
+      margin-bottom: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #28a745;
       color: white;
       border: none;
-      width: 100%;
+      border-radius: 6px;
       font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    .success {
+      text-align: center;
+      color: green;
+      margin-top: 15px;
+      display: none;
     }
   </style>
 </head>
 <body>
 
+<div class="container">
+
 <h2>Looking for a Place to Rent?</h2>
-<p>Submit your request and we will match you with landlords.</p>
+<p>Submit your request and we will match you with available landlords.</p>
 
 <form id="requestForm">
 
-<input name="name" placeholder="Full Name" required>
-<input name="email" placeholder="Email">
-<input name="phone" placeholder="Phone / WhatsApp" required>
+<label>Full Name</label>
+<input name="name" required>
 
-<select name="propertyType">
+<label>Email</label>
+<input name="email">
+
+<label>Phone / WhatsApp</label>
+<input name="phone" required>
+
+<label>Property Type</label>
+<select name="propertyType" required>
+  <option value="">Select Property Type</option>
   <option>Room</option>
   <option>Apartment</option>
   <option>House</option>
 </select>
 
-<input id="locationInput" placeholder="Type location (e.g. Setapak, KL)" />
-<div id="map" style="height:300px; margin:10px 0;"></div>
+<label>State</label>
+<select id="state" name="state" required>
+  <option value="">Select State</option>
+  <option>Kuala Lumpur</option>
+  <option>Selangor</option>
+  <option>Johor</option>
+  <option>Penang</option>
+  <option>Perak</option>
+  <option>Negeri Sembilan</option>
+  <option>Melaka</option>
+  <option>Pahang</option>
+  <option>Sabah</option>
+  <option>Sarawak</option>
+</select>
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCQtbofqSeB6HVesl-ItaVwfVpnDDXevXQ&libraries=places"></script>
+<label>City / Town</label>
+<select id="city" name="city" required>
+  <option value="">Select City</option>
+</select>
 
-<script>
-let map, marker, circle;
-let selectedLat = "";
-let selectedLng = "";
-let selectedRadius = 3;
+<label>Budget (RM)</label>
+<input name="budget" placeholder="Example: 500 - 1000">
 
-function initMap() {
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: 3.1390, lng: 101.6869 }, // KL default
-    zoom: 12
-  });
-
-  const input = document.getElementById("locationInput");
-  const autocomplete = new google.maps.places.Autocomplete(input);
-
-  autocomplete.addListener("place_changed", function () {
-    const place = autocomplete.getPlace();
-    if (!place.geometry) return;
-
-    selectedLat = place.geometry.location.lat();
-    selectedLng = place.geometry.location.lng();
-
-    map.setCenter(place.geometry.location);
-
-    if (marker) marker.setMap(null);
-    if (circle) circle.setMap(null);
-
-    marker = new google.maps.Marker({
-      position: place.geometry.location,
-      map: map,
-      draggable: true
-    });
-
-    circle = new google.maps.Circle({
-      map: map,
-      center: place.geometry.location,
-      radius: selectedRadius * 1000,
-      editable: true,
-      draggable: true
-    });
-
-    // Update values when moved
-    google.maps.event.addListener(circle, 'radius_changed', function() {
-      selectedRadius = (circle.getRadius() / 1000).toFixed(1);
-    });
-
-    google.maps.event.addListener(circle, 'center_changed', function() {
-      selectedLat = circle.getCenter().lat();
-      selectedLng = circle.getCenter().lng();
-    });
-  });
-}
-
-window.onload = initMap;
-</script>
-
-<input name="budget" placeholder="Budget Range (RM)">
+<label>Move-in Date</label>
 <input name="moveInDate" type="date">
-<input name="duration" placeholder="Duration (months)">
-<input name="occupation" placeholder="Occupation">
-<input name="people" placeholder="Number of people">
-<input name="needs" placeholder="Extra needs (washing machine, parking, etc)">
+
+<label>Duration (months)</label>
+<input name="duration">
+
+<label>Occupation</label>
+<input name="occupation">
+
+<label>Number of People</label>
+<input name="people">
+
+<label>Extra Needs</label>
+<input name="needs" placeholder="Washing machine, parking, furnished, etc">
 
 <button type="submit">Submit Request</button>
 
 </form>
 
+<div class="success" id="successMsg">
+Request submitted successfully!
+</div>
+
+</div>
+
 <script>
+// City options by state
+const cityOptions = {
+  "Kuala Lumpur": ["Cheras", "Setapak", "Wangsa Maju", "Bangsar", "Mont Kiara"],
+  "Selangor": ["Shah Alam", "Subang Jaya", "Petaling Jaya", "Puchong", "Klang", "Kajang"],
+  "Johor": ["Johor Bahru", "Skudai", "Pasir Gudang"],
+  "Penang": ["George Town", "Bayan Lepas", "Butterworth"],
+  "Perak": ["Ipoh", "Taiping"],
+  "Negeri Sembilan": ["Seremban"],
+  "Melaka": ["Melaka City"],
+  "Pahang": ["Kuantan"],
+  "Sabah": ["Kota Kinabalu"],
+  "Sarawak": ["Kuching"]
+};
+
+// Update city dropdown when state changes
+document.getElementById("state").addEventListener("change", function() {
+  const state = this.value;
+  const citySelect = document.getElementById("city");
+
+  citySelect.innerHTML = "<option value=''>Select City</option>";
+
+  if (cityOptions[state]) {
+    cityOptions[state].forEach(city => {
+      const option = document.createElement("option");
+      option.value = city;
+      option.textContent = city;
+      citySelect.appendChild(option);
+    });
+  }
+});
+
+// Submit form to Google Apps Script
 document.getElementById("requestForm").addEventListener("submit", function(e) {
   e.preventDefault();
 
-  const formData = Object.fromEntries(new FormData(this).entries());
+  const form = this;
+  const data = Object.fromEntries(new FormData(form).entries());
 
-  formData.locationText = document.getElementById("locationInput").value;
-  formData.lat = selectedLat;
-  formData.lng = selectedLng;
-  formData.radius = selectedRadius;
-
-  fetch("https://script.google.com/macros/s/AKfycbwYAFv1nRhf9ATD-7XF_Z9Mg_anb2oj2i3rQ4g7vVqHg-kTX7ncN8yjNfUxn5I5CRDq/exec", {
+  fetch("https://script.google.com/macros/s/AKfycbzFCOUoIXtEKeyRZd6jvABcgu-pRT4Ju3AdnyXv0ZjjDOpzC1Wc0ZFGaW533ENNiLpb/exec", {
     method: "POST",
-    body: JSON.stringify(formData)
+    body: JSON.stringify(data)
   })
   .then(res => res.text())
-  .then(msg => {
-    alert("Request submitted!");
-    this.reset();
+  .then(() => {
+    document.getElementById("successMsg").style.display = "block";
+    form.reset();
+  })
+  .catch(() => {
+    alert("Submission failed. Please try again.");
   });
 });
-
 </script>
 
 </body>
