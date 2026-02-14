@@ -610,7 +610,7 @@
     </div>
   </div>
 
-  <!-- ===================== GIVE RENT MODAL (sample cards) ===================== -->
+  <!-- ===================== GIVE RENT MODAL (LIVE from Google Sheet) ===================== -->
   <div class="modal" id="giveRentModal">
     <div class="overlay" onclick="closeModal('giveRentModal')"></div>
     <div class="box">
@@ -620,7 +620,7 @@
       </header>
 
       <p style="margin:0;color:#666;line-height:1.4;">
-        Sample demand cards for now. Next step: connect to your Google Sheet to load real requests.
+        Live tenant requests from database (Google Sheet).
       </p>
 
       <div class="cards" id="demandCards"></div>
@@ -643,12 +643,12 @@
     function openModal(id){
       document.getElementById(id).classList.add("show");
       document.body.style.overflow = "hidden";
-    
+
       if (id === "giveRentModal") {
         loadDemandCards(30);
       }
     }
-    
+
     function closeModal(id){
       document.getElementById(id).classList.remove("show");
       document.body.style.overflow = "";
@@ -783,7 +783,7 @@
     occupationOtherInput.addEventListener("input", syncOccupation);
     syncOccupation();
 
-    /* ===== Submit form (unchanged URL) ===== */
+    /* ===== Submit form ===== */
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFCOUoIXtEKeyRZd6jvABcgu-pRT4Ju3AdnyXv0ZjjDOpzC1Wc0ZFGaW533ENNiLpb/exec";
 
     document.getElementById("requestForm").addEventListener("submit", function(e) {
@@ -829,38 +829,45 @@
         maxSlider.value = 1500;
         syncBudget();
 
-        // optional: close modal after submit
+        // close modal after submit
         closeModal("requestModal");
       })
       .catch(() => alert("Submission failed. Please try again."));
     });
 
-    /* ===== Demand cards ===== */
-    // ===== Load Tenant Demand from Google Sheet (JSONP) =====
+    /* ===== Load Tenant Demand from Google Sheet (JSONP) ===== */
     function loadDemandCards(limit = 30) {
       const el = document.getElementById("demandCards");
       el.innerHTML = "Loading...";
-    
+
       // unique callback name each time
       const cbName = "demandCb_" + Date.now();
-    
+
       window[cbName] = function(payload) {
         try {
           if (!payload || !payload.ok) {
             el.innerHTML = "Failed to load data.";
             return;
           }
-    
+
           const rows = payload.rows || [];
           if (rows.length === 0) {
             el.innerHTML = "No requests yet.";
             return;
           }
-    
+
           el.innerHTML = "";
+
           rows.forEach((d) => {
             const needsArr = (d.needs || "").split(",").map(s => s.trim()).filter(Boolean);
-    
+
+            // nice date
+            let moveInNice = "-";
+            if (d.moveInDate) {
+              const dt = new Date(d.moveInDate);
+              moveInNice = isNaN(dt.getTime()) ? String(d.moveInDate) : dt.toLocaleDateString("en-MY");
+            }
+
             const div = document.createElement("div");
             div.className = "card";
             div.innerHTML = `
@@ -870,7 +877,7 @@
               </div>
               <strong>Budget: RM ${d.budget || "-"}</strong>
               <div style="margin-top:6px;color:#444;font-size:13px;">
-                Move-in: ${d.moveInDate || "-"} • People: ${d.people || "-"}
+                Move-in: ${moveInNice} • People: ${d.people || "-"}
               </div>
               <div style="margin-top:6px;color:#444;font-size:13px;">
                 Duration: ${d.duration || "-"} • Occupation: ${d.occupation || "-"}
@@ -882,25 +889,20 @@
             el.appendChild(div);
           });
         } finally {
-          // cleanup callback
           delete window[cbName];
         }
       };
-    
-      // inject script tag (JSONP)
+
       const script = document.createElement("script");
       script.src = `${SCRIPT_URL}?action=list&limit=${limit}&callback=${cbName}`;
       script.onerror = () => {
         el.innerHTML = "Failed to load. Check Apps Script deployment access.";
         delete window[cbName];
       };
-    
+
       document.body.appendChild(script);
-    
-      // remove script tag after load to keep DOM clean
       script.onload = () => script.remove();
     }
-
   </script>
 </body>
 </html>
