@@ -69,6 +69,41 @@
       margin-top: 15px;
       display: none;
     }
+
+    .budget-wrap { margin-bottom: 14px; }
+
+    .budget-values {
+      display: flex;
+      justify-content: center;
+      margin: 8px 0 10px;
+      font-weight: bold;
+      color: #222;
+    }
+    
+    .range-group {
+      position: relative;
+      height: 34px;
+    }
+    
+    .range-group input[type="range"]{
+      position: absolute;
+      left: 0;
+      top: 0;
+      margin: 0;
+      width: 100%;
+      height: 34px;
+      background: transparent;
+      pointer-events: none; /* important: we enable per-thumb below */
+    }
+    
+    /* allow interaction */
+    .range-group input[type="range"]::-webkit-slider-thumb{
+      pointer-events: auto;
+    }
+    .range-group input[type="range"]::-moz-range-thumb{
+      pointer-events: auto;
+    }
+
   </style>
 </head>
 <body>
@@ -121,7 +156,20 @@
 </select>
 
 <label>Budget (RM)</label>
-<input name="budget" placeholder="Example: 500 - 1000">
+
+<div class="budget-wrap">
+  <div class="budget-values">
+    <span id="budgetText">RM 500 – RM 1500</span>
+  </div>
+
+  <div class="range-group">
+    <input id="minBudget" type="range" min="0" max="5000" step="50" value="500">
+    <input id="maxBudget" type="range" min="0" max="5000" step="50" value="1500">
+  </div>
+
+  <!-- This keeps your backend exactly the same -->
+  <input type="hidden" name="budget" id="budgetHidden" value="500 - 1500">
+</div>
 
 <label>Move-in Date</label>
 <input name="moveInDate" type="date">
@@ -181,6 +229,32 @@ document.getElementById("state").addEventListener("change", function() {
     });
   }
 });
+// Budget slider (min/max)
+const minSlider = document.getElementById("minBudget");
+const maxSlider = document.getElementById("maxBudget");
+const budgetText = document.getElementById("budgetText");
+const budgetHidden = document.getElementById("budgetHidden");
+
+function formatRM(n) {
+  return "RM " + Number(n).toLocaleString("en-MY");
+}
+
+function syncBudget() {
+  let minVal = Number(minSlider.value);
+  let maxVal = Number(maxSlider.value);
+
+  // prevent crossing
+  if (minVal > maxVal) {
+    [minVal, maxVal] = [maxVal, minVal];
+  }
+
+  budgetText.textContent = `${formatRM(minVal)} – ${formatRM(maxVal)}`;
+  budgetHidden.value = `${minVal} - ${maxVal}`;
+}
+
+minSlider.addEventListener("input", syncBudget);
+maxSlider.addEventListener("input", syncBudget);
+syncBudget();
 
 // Submit form to Google Apps Script
 document.getElementById("requestForm").addEventListener("submit", function(e) {
