@@ -290,6 +290,62 @@
       font-weight:700;
     }
 
+        /* ===== People stepper ===== */
+    .stepper{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-top:6px;
+      margin-bottom:14px;
+    }
+    .stepper-btn{
+      width:44px;
+      height:44px;
+      border-radius:10px;
+      border:1px solid #ccc;
+      background:#fff;
+      font-size:22px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .stepper-btn:active{ transform: scale(0.98); }
+    .stepper-value{
+      flex:1;
+      height:44px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:800;
+      background:#fff;
+    }
+    
+    /* ===== Needs chips ===== */
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:6px;
+      margin-bottom:14px;
+    }
+    .chip{
+      border:1px solid #ccc;
+      border-radius:999px;
+      padding:10px 12px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .chip input{
+      width:auto;
+      margin:0;
+    }
+    
     /* ===== Your working budget slider styles ===== */
     .budget-wrap { margin-bottom: 14px; }
     .budget-values {
@@ -487,17 +543,51 @@
         <label>Move-in Date</label>
         <input name="moveInDate" type="date">
 
-        <label>Duration (months)</label>
-        <input name="duration">
+        <label>Duration</label>
+        <select name="duration" required>
+          <option value="">Select duration</option>
+          <option value="1 Month">1 Month</option>
+          <option value="6 Months">6 Months</option>
+          <option value="1 Year">1 Year</option>
+          <option value="2 Years">2 Years</option>
+          <option value="3 Years">3 Years</option>
+          <option value="As Long As Possible">As Long As Possible</option>
+        </select>
 
         <label>Occupation</label>
-        <input name="occupation">
+        <select name="occupation" required>
+          <option value="">Select occupation</option>
+          <option value="Student">Student</option>
+          <option value="Worker">Worker</option>
+          <option value="Business Owner">Business Owner</option>
+          <option value="Freelancer">Freelancer</option>
+          <option value="Government">Government</option>
+          <option value="Other">Other</option>
+        </select>
 
         <label>Number of People</label>
-        <input name="people">
+        
+        <div class="stepper">
+          <button type="button" class="stepper-btn" id="peopleMinus">−</button>
+          <div class="stepper-value" id="peopleValue">1</div>
+          <button type="button" class="stepper-btn" id="peoplePlus">+</button>
+        </div>
+        
+        <input type="hidden" name="people" id="peopleHidden" value="1">
 
         <label>Extra Needs</label>
-        <input name="needs" placeholder="Washing machine, parking, furnished, etc">
+        
+        <div class="chips" id="needsChips">
+          <label class="chip"><input type="checkbox" value="Washing machine"> Washing machine</label>
+          <label class="chip"><input type="checkbox" value="Parking"> Parking</label>
+          <label class="chip"><input type="checkbox" value="Furnished"> Furnished</label>
+          <label class="chip"><input type="checkbox" value="Wifi"> Wifi</label>
+          <label class="chip"><input type="checkbox" value="Air-cond"> Air-cond</label>
+          <label class="chip"><input type="checkbox" value="Near MRT/LRT"> Near MRT/LRT</label>
+        </div>
+        
+        <!-- keep backend same -->
+        <input type="hidden" name="needs" id="needsHidden" value="">
 
         <button type="submit">Submit Request</button>
       </form>
@@ -599,6 +689,44 @@
     maxSlider.addEventListener("input", syncBudget);
     syncBudget();
 
+        // ===== People stepper =====
+    const peopleMinus = document.getElementById("peopleMinus");
+    const peoplePlus  = document.getElementById("peoplePlus");
+    const peopleValue = document.getElementById("peopleValue");
+    const peopleHidden = document.getElementById("peopleHidden");
+    
+    let peopleCount = 1;
+    
+    function syncPeople(){
+      peopleValue.textContent = String(peopleCount);
+      peopleHidden.value = String(peopleCount);
+    }
+    
+    peopleMinus.addEventListener("click", () => {
+      peopleCount = Math.max(1, peopleCount - 1);
+      syncPeople();
+    });
+    
+    peoplePlus.addEventListener("click", () => {
+      peopleCount = Math.min(20, peopleCount + 1); // cap at 20 (you can change)
+      syncPeople();
+    });
+    
+    syncPeople();
+    
+    // ===== Needs chips → hidden field =====
+    const needsHidden = document.getElementById("needsHidden");
+    const needsChips = document.getElementById("needsChips");
+    
+    function syncNeeds(){
+      const selected = [...needsChips.querySelectorAll("input[type='checkbox']:checked")]
+        .map(x => x.value);
+      needsHidden.value = selected.join(", ");
+    }
+    
+    needsChips.addEventListener("change", syncNeeds);
+    syncNeeds();
+
     /* ===== Submit form (unchanged URL) ===== */
     document.getElementById("requestForm").addEventListener("submit", function(e) {
       e.preventDefault();
@@ -615,6 +743,13 @@
         document.getElementById("successMsg").style.display = "block";
         form.reset();
 
+        // reset people + needs after form.reset()
+        peopleCount = 1;
+        syncPeople();
+        
+        [...needsChips.querySelectorAll("input[type='checkbox']")].forEach(cb => cb.checked = false);
+        syncNeeds();
+        
         // reset slider text after reset
         minSlider.value = 500;
         maxSlider.value = 1500;
