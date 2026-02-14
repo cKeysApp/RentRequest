@@ -100,16 +100,19 @@
 <label>State</label>
 <select id="state" name="state" required>
   <option value="">Select State</option>
-  <option>Kuala Lumpur</option>
-  <option>Selangor</option>
   <option>Johor</option>
+  <option>Kedah</option>
+  <option>Kelantan</option>
+  <option>Melaka</option>
+  <option>Negeri Sembilan</option>
+  <option>Pahang</option>
   <option>Penang</option>
   <option>Perak</option>
-  <option>Negeri Sembilan</option>
-  <option>Melaka</option>
-  <option>Pahang</option>
+  <option>Perlis</option>
   <option>Sabah</option>
   <option>Sarawak</option>
+  <option>Selangor</option>
+
 </select>
 
 <label>City / Town</label>
@@ -148,9 +151,13 @@ Request submitted successfully!
 <script>
 // City options by state
 const cityOptions = {
+  "Johor": ["Johor Bahru", "Skudai", "Pasir Gudang"],
+  "Kedah": ["Alor Setar", "Langkawi", "Sungai Petan", "Baling", "Changloon", "Kodiang", "Jitra", "Kulim", "Pendang", "Serdang"],
+  "Kelantan": ["Kota Bharu", "Dabong", "Jelawat", "Ketereh", "Kuala Krai", "Kubang Kerian", "Machang", "Pasir Mas", "Pengkalan Chepa", "Pengkalan Kubor", "Pengkalan Pasir", "Perupok", "Wakaf Bharu", "Wakaf Che Yeh"], 
+  "Melaka": ["Ayer Keroh", "Alor Gajah", "Asahan", "Ayer Paabas", "Batu Berendam", "Bemban", "Jasin", "Klebang", "Lendu, Alor Gajah", "Lubuk China", "Machap Baru", "Paya Rumput", "Pokok Mangga", "Simpang Ampat", "Telok Gong", "Telok Mas"],
+  "Negeri Sembilan": ["Air Kuning Selatan", "Ampang Tinggi", "Bahau", "Bandar Baru Nilai", "Bandar Seri Jempol", "Batang Benar", "Batu Kikir", "Gemas", "Kota, Negeri Sembilan", "Kuala Pilah", "Kuala Sawah", "Lukut", "Mambau", "Nilai", "Pajam", "Pasir Panjang", "Pengkalan Kempas", "Port Dickson", "Rembau", "Rompin", "Senawang", "Seremban 2", "Seremban 3", "Seri Menanti", "Serting", "Sikamat", "Siliau", "Simpang Durian", "Simpang Pertang", "Sungai Gadut", "Sungai Muntoh", "Tampin", "Tanjung Ipoh", "Teluk Kemang", "Tiroi"],
   "Kuala Lumpur": ["Cheras", "Setapak", "Wangsa Maju", "Bangsar", "Mont Kiara"],
   "Selangor": ["Shah Alam", "Subang Jaya", "Petaling Jaya", "Puchong", "Klang", "Kajang"],
-  "Johor": ["Johor Bahru", "Skudai", "Pasir Gudang"],
   "Penang": ["George Town", "Bayan Lepas", "Butterworth"],
   "Perak": ["Ipoh", "Taiping"],
   "Negeri Sembilan": ["Seremban"],
