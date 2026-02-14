@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Find Rental - Submit Your Request</title>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 500px;
+      margin: auto;
+      padding: 20px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+    }
+    button {
+      padding: 12px;
+      background: green;
+      color: white;
+      border: none;
+      width: 100%;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Looking for a Place to Rent?</h2>
+<p>Submit your request and we will match you with landlords.</p>
+
+<form id="requestForm">
+
+<input name="name" placeholder="Full Name" required>
+<input name="email" placeholder="Email">
+<input name="phone" placeholder="Phone / WhatsApp" required>
+
+<select name="propertyType">
+  <option>Room</option>
+  <option>Apartment</option>
+  <option>House</option>
+</select>
+
+<input name="location" placeholder="Preferred Location" required>
+<input name="budget" placeholder="Budget Range (RM)">
+<input name="moveInDate" type="date">
+<input name="duration" placeholder="Duration (months)">
+<input name="occupation" placeholder="Occupation">
+<input name="people" placeholder="Number of people">
+<input name="needs" placeholder="Extra needs (washing machine, parking, etc)">
+
+<button type="submit">Submit Request</button>
+
+</form>
+
+<script>
+document.getElementById("requestForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const data = Object.fromEntries(new FormData(this).entries());
+
+  fetch("https://script.google.com/macros/s/AKfycbyPU25409oqSoXf8EmC5ZpTDDMvJWwQc13JMcCoCTHjSbMZrs6oS0QMSUEfCA9dxvg/exec", {
+    method: "POST",
+    body: JSON.stringify(data)
+  })
+  .then(res => res.text())
+  .then(msg => {
+    alert("Request submitted successfully!");
+    document.getElementById("requestForm").reset();
+  })
+  .catch(err => alert("Error submitting form"));
+});
+</script>
+
+</body>
+</html>
