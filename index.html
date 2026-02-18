@@ -129,6 +129,26 @@
       opacity:1;
       pointer-events:auto;
     }
+    
+    .card-actions{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+    }
+    .card-actions .btn{
+      min-width:auto;
+      flex:1;
+      padding:10px 12px;
+      border-radius:10px;
+    }
+    .btn.small{
+      padding:10px 12px;
+      font-size:13px;
+    }
+    .btn.disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
 
     /* ===== Main hero ===== */
     .wrap{
@@ -440,6 +460,79 @@
     <a href="javascript:void(0)" onclick="openModal('giveRentModal'); toggleDrawer(false)">Give Rent</a>
   </div>
   <div class="backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
+  
+  <!-- Firebase Auth -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { 
+      getAuth, 
+      GoogleAuthProvider, 
+      signInWithPopup, 
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvyIV4XSWzGnMzMhgJBYAPRbf8NB2NYCg",
+      authDomain: "find-rental-f7694.firebaseapp.com",
+      projectId: "find-rental-f7694",
+      storageBucket: "find-rental-f7694.firebasestorage.app",
+      messagingSenderId: "6641924981",
+      appId: "1:6641924981:web:9dfaf299e16108a97d713c"
+    };
+  
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+  
+    // Make auth accessible globally
+    window.firebaseAuthCurrentUser = () => auth.currentUser;
+  
+    // Google Login
+    window.loginWithGoogle = async function() {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+  
+    // Email Register
+    window.registerWithEmail = async function(email, password) {
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+  
+    // Email Login
+    window.loginWithEmail = async function(email, password) {
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+  
+    // Logout
+    window.logoutUser = async function() {
+      await signOut(auth);
+    };
+  
+    // Detect login state
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log("Logged in:", user.email);
+        document.body.classList.add("logged-in");
+      } else {
+        console.log("Logged out");
+        document.body.classList.remove("logged-in");
+      }
+    });
+  </script>
 
   <!-- Topbar -->
   <div class="topbar" id="home">
@@ -834,40 +927,49 @@
       })
       .catch(() => alert("Submission failed. Please try again."));
     });
+    
+    function requireAuth(callback) {
+      const user = window.firebaseAuthCurrentUser();
+      if (!user) {
+        openModal("authModal");
+        return;
+      }
+      callback();
+    }
 
     /* ===== Load Tenant Demand from Google Sheet (JSONP) ===== */
     function loadDemandCards(limit = 30) {
       const el = document.getElementById("demandCards");
       el.innerHTML = "Loading...";
-
-      // unique callback name each time
+    
       const cbName = "demandCb_" + Date.now();
-
+    
       window[cbName] = function(payload) {
         try {
           if (!payload || !payload.ok) {
             el.innerHTML = "Failed to load data.";
             return;
           }
-
+    
           const rows = payload.rows || [];
           if (rows.length === 0) {
             el.innerHTML = "No requests yet.";
             return;
           }
-
+    
           el.innerHTML = "";
-
+    
           rows.forEach((d) => {
             const needsArr = (d.needs || "").split(",").map(s => s.trim()).filter(Boolean);
-
-            // nice date
+    
             let moveInNice = "-";
             if (d.moveInDate) {
               const dt = new Date(d.moveInDate);
               moveInNice = isNaN(dt.getTime()) ? String(d.moveInDate) : dt.toLocaleDateString("en-MY");
             }
-
+    
+            const offered = String(d.status || "").toLowerCase() === "offered";
+    
             const div = document.createElement("div");
             div.className = "card";
             div.innerHTML = `
@@ -875,22 +977,62 @@
                 <span>${d.state || "-"} • ${d.city || "-"}</span>
                 <span>${d.propertyType || "-"}</span>
               </div>
+    
               <strong>Budget: RM ${d.budget || "-"}</strong>
+    
               <div style="margin-top:6px;color:#444;font-size:13px;">
                 Move-in: ${moveInNice} • People: ${d.people || "-"}
               </div>
+    
               <div style="margin-top:6px;color:#444;font-size:13px;">
                 Duration: ${d.duration || "-"} • Occupation: ${d.occupation || "-"}
               </div>
+    
               <div style="margin-top:8px;">
                 ${needsArr.map(n => `<span class="pill">${n}</span>`).join("")}
+                ${d.status ? `<span class="pill">Status: ${d.status}</span>` : ""}
+              </div>
+    
+              <div class="card-actions">
+                <button class="btn primary small ${offered ? "disabled" : ""}" ${offered ? "disabled" : ""} data-requestid="${d.requestId}">
+                  ${offered ? "Already Offered" : "Offer Rent"}
+                </button>
               </div>
             `;
+    
+            // attach click handler
+            const offerBtn = div.querySelector("button[data-requestid]");
+            offerBtn.addEventListener("click", () => {
+              const requestId = offerBtn.getAttribute("data-requestid");
+              requireAuth(() => offerRent(requestId, offerBtn));
+            });
+    
             el.appendChild(div);
           });
+    
         } finally {
           delete window[cbName];
         }
+      };
+    
+      const url = `${SCRIPT_URL}?action=list&limit=${encodeURIComponent(limit)}&callback=${encodeURIComponent(cbName)}&_ts=${Date.now()}`;
+    
+      // cleanup old jsonp scripts
+      document.querySelectorAll("script[data-jsonp='demand']").forEach(s => s.remove());
+    
+      const script = document.createElement("script");
+      script.dataset.jsonp = "demand";
+      script.src = url;
+    
+      script.onerror = () => {
+        el.innerHTML = `Failed to load. Check Apps Script deployment access.<br><small style="color:#666;word-break:break-all;">${url}</small>`;
+        delete window[cbName];
+      };
+    
+      document.body.appendChild(script);
+      script.onload = () => script.remove();
+    }
+
       };
 
       const script = document.createElement("script");
@@ -899,10 +1041,103 @@
         el.innerHTML = "Failed to load. Check Apps Script deployment access.";
         delete window[cbName];
       };
+    
+      async function offerRent(requestId, buttonEl) {
+        try {
+          const user = window.firebaseAuthCurrentUser?.() || null;
+      
+          // fallback: if your auth modal code doesn't expose helper, we still proceed via Firebase global
+          // We'll access Firebase user through a shared getter you add below (D)
+      
+          if (!user) {
+            showToast("Please login first.");
+            openModal("authModal");
+            return;
+          }
+      
+          // UI loading
+          if (buttonEl) {
+            buttonEl.textContent = "Offering...";
+            buttonEl.classList.add("disabled");
+            buttonEl.disabled = true;
+          }
+      
+          const payload = {
+            action: "createDeal",
+            requestId: String(requestId),
+            ownerUid: user.uid,
+            ownerEmail: user.email
+          };
+      
+          const res = await fetch(SCRIPT_URL, {
+            method: "POST",
+            body: JSON.stringify(payload)
+          });
+      
+          const outText = await res.text();
+          let out;
+          try { out = JSON.parse(outText); } catch(e){ out = null; }
+      
+          if (!out || !out.ok) {
+            throw new Error(out?.error || "Failed to create deal.");
+          }
+      
+          showToast("✅ Offer sent! Deal created: " + out.dealId);
+      
+          // update UI
+          if (buttonEl) {
+            buttonEl.textContent = "Already Offered";
+            // status pill update (simple refresh)
+            setTimeout(() => loadDemandCards(30), 500);
+          }
+        } catch (err) {
+          console.error(err);
+          showToast("❌ Offer failed. " + (err?.message || ""));
+          if (buttonEl) {
+            buttonEl.textContent = "Offer Rent";
+            buttonEl.classList.remove("disabled");
+            buttonEl.disabled = false;
+          }
+        }
+      }
 
       document.body.appendChild(script);
       script.onload = () => script.remove();
     }
   </script>
+  <div class="modal" id="authModal">
+    <div class="overlay" onclick="closeModal('authModal')"></div>
+    <div class="box">
+      <header>
+        <h2>Login / Register</h2>
+        <button class="close" onclick="closeModal('authModal')">✕</button>
+      </header>
+  
+      <button class="btn primary" onclick="loginWithGoogle()" style="width:100%;margin-bottom:12px;">
+        Continue with Google
+      </button>
+  
+      <div style="margin:10px 0;text-align:center;color:#666;">OR</div>
+  
+      <input type="email" id="authEmail" placeholder="Email">
+      <input type="password" id="authPassword" placeholder="Password">
+  
+      <button class="btn primary" style="width:100%;margin-top:10px;"
+        onclick="loginWithEmail(
+          document.getElementById('authEmail').value,
+          document.getElementById('authPassword').value
+        )">
+        Login
+      </button>
+  
+      <button class="btn" style="width:100%;margin-top:10px;"
+        onclick="registerWithEmail(
+          document.getElementById('authEmail').value,
+          document.getElementById('authPassword').value
+        )">
+        Register
+      </button>
+    </div>
+  </div>
 </body>
 </html>
