@@ -790,15 +790,15 @@
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTVjVrVwALfO9RaxR--LxD1XymlLfsP-LSNiMq9o3rhaz5wxbd5ciD9fWzhYMqO9y6/exec";
   
   /* ===== Require Auth ===== */
-  function requireAuth(callback) {
+   function requireAuth(callback) {
     const user = window.firebaseAuthCurrentUser?.();
     if (!user) {
-      openModal("authModal");
+      window.location.href = "login.html?redirect=index.html";
       return;
     }
     callback();
   }
-  
+
   /* ===== Offer Rent ===== */
   async function offerRent(requestId, buttonEl) {
     try {
