@@ -90,6 +90,50 @@
       letter-spacing:0;
     }
 
+    /* ===== Account (top right) ===== */
+    .account{
+      margin-left:auto;
+      position:relative;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .account-dropdown{
+      display:none;
+      position:absolute;
+      right:0;
+      top:48px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.12);
+      min-width: 180px;
+      overflow:hidden;
+      z-index: 50;
+    }
+    .account-dropdown a,
+    .account-dropdown button{
+      display:block;
+      width:100%;
+      text-align:left;
+      padding:10px 12px;
+      background:#fff;
+      border:0;
+      border-top:1px solid var(--border);
+      cursor:pointer;
+      font-weight:700;
+      color:#111;
+      text-decoration:none;
+    }
+    .account-dropdown a:first-child,
+    .account-dropdown button:first-child{
+      border-top:0;
+    }
+    .account-dropdown a:hover,
+    .account-dropdown button:hover{
+      background: var(--bg);
+    }
+
     /* ===== Menu drawer ===== */
     .drawer{
       position:fixed;
@@ -129,7 +173,7 @@
       opacity:1;
       pointer-events:auto;
     }
-    
+
     .card-actions{
       display:flex;
       gap:10px;
@@ -141,9 +185,11 @@
       padding:10px 12px;
       border-radius:10px;
     }
+
     .btn.small{
-      padding:10px 12px;
+      padding:8px 12px;
       font-size:13px;
+      min-width:auto;
     }
     .btn.disabled{
       opacity:.6;
@@ -449,40 +495,7 @@
     }
   </style>
 </head>
-  <div class="modal" id="authModal">
-    <div class="overlay" onclick="closeModal('authModal')"></div>
-    <div class="box">
-      <header>
-        <h2>Login / Register</h2>
-        <button class="close" onclick="closeModal('authModal')">✕</button>
-      </header>
-  
-      <button class="btn primary" onclick="loginWithGoogle()" style="width:100%;margin-bottom:12px;">
-        Continue with Google
-      </button>
-  
-      <div style="margin:10px 0;text-align:center;color:#666;">OR</div>
-  
-      <input type="email" id="authEmail" placeholder="Email">
-      <input type="password" id="authPassword" placeholder="Password">
-  
-      <button class="btn primary" style="width:100%;margin-top:10px;"
-        onclick="loginWithEmail(
-          document.getElementById('authEmail').value,
-          document.getElementById('authPassword').value
-        )">
-        Login
-      </button>
-  
-      <button class="btn" style="width:100%;margin-top:10px;"
-        onclick="registerWithEmail(
-          document.getElementById('authEmail').value,
-          document.getElementById('authPassword').value
-        )">
-        Register
-      </button>
-    </div>
-  </div>
+
 <body>
   <!-- Drawer + backdrop -->
   <div class="drawer" id="drawer">
@@ -493,20 +506,16 @@
     <a href="javascript:void(0)" onclick="openModal('giveRentModal'); toggleDrawer(false)">Give Rent</a>
   </div>
   <div class="backdrop" id="drawerBackdrop" onclick="toggleDrawer(false)"></div>
-  
-  <!-- Firebase Auth -->
+
+  <!-- Firebase Auth (kept, but we use login.html for login) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { 
-      getAuth, 
-      GoogleAuthProvider, 
-      signInWithPopup, 
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
+    import {
+      getAuth,
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  
+
     const firebaseConfig = {
       apiKey: "AIzaSyCvyIV4XSWzGnMzMhgJBYAPRbf8NB2NYCg",
       authDomain: "find-rental-f7694.firebaseapp.com",
@@ -515,54 +524,35 @@
       messagingSenderId: "6641924981",
       appId: "1:6641924981:web:9dfaf299e16108a97d713c"
     };
-  
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-  
-    // Make auth accessible globally
+
+    // expose current user
     window.firebaseAuthCurrentUser = () => auth.currentUser;
-  
-    // Google Login
-    window.loginWithGoogle = async function() {
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (err) {
-        alert(err.message);
-      }
-    };
-  
-    // Email Register
-    window.registerWithEmail = async function(email, password) {
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        alert(err.message);
-      }
-    };
-  
-    // Email Login
-    window.loginWithEmail = async function(email, password) {
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        alert(err.message);
-      }
-    };
-  
-    // Logout
+
+    // logout
     window.logoutUser = async function() {
       await signOut(auth);
+      window.location.reload();
     };
-  
-    // Detect login state
+
+    // update account UI
     onAuthStateChanged(auth, (user) => {
+      const btn = document.getElementById("accountBtn");
+      const dropdown = document.getElementById("accountDropdown");
+
+      if (!btn || !dropdown) return;
+
       if (user) {
-        console.log("Logged in:", user.email);
-        document.body.classList.add("logged-in");
+        const name = user.displayName || (user.email ? user.email.split("@")[0] : "Account");
+        btn.textContent = name;
+        btn.onclick = null;
+        dropdown.style.display = "none";
       } else {
-        console.log("Logged out");
-        document.body.classList.remove("logged-in");
+        btn.textContent = "Login";
+        btn.onclick = () => window.location.href = "login.html?redirect=index.html";
+        dropdown.style.display = "none";
       }
     });
   </script>
@@ -578,6 +568,16 @@
       <div>
         cKeys
         <small>Connecting Keys All over Malaysia</small>
+      </div>
+    </div>
+
+    <!-- ✅ Account box (top right) -->
+    <div class="account" id="accountBox">
+      <button class="btn small" id="accountBtn">Login</button>
+
+      <div class="account-dropdown" id="accountDropdown">
+        <a href="dashboard.html">Dashboard</a>
+        <button type="button" onclick="logoutUser()">Logout</button>
       </div>
     </div>
   </div>
@@ -693,7 +693,6 @@
         </select>
 
         <label>Occupation</label>
-        <!-- NOTE: this select has NO name to avoid duplicate fields -->
         <select id="occupationSelect" required>
           <option value="">Select occupation</option>
           <option value="Student">Student</option>
@@ -709,7 +708,6 @@
           <input id="occupationOtherInput" type="text" placeholder="Type your occupation">
         </div>
 
-        <!-- This is the only occupation field that gets submitted -->
         <input type="hidden" name="occupation" id="occupationHidden" value="">
 
         <label>Number of People</label>
@@ -736,7 +734,7 @@
     </div>
   </div>
 
-  <!-- ===================== GIVE RENT MODAL (LIVE from Google Sheet) ===================== -->
+  <!-- ===================== GIVE RENT MODAL ===================== -->
   <div class="modal" id="giveRentModal">
     <div class="overlay" onclick="closeModal('giveRentModal')"></div>
     <div class="box">
@@ -746,7 +744,7 @@
       </header>
 
       <p style="margin:0;color:#666;line-height:1.4;">
-        Live tenant requests .
+        Live tenant requests.
       </p>
 
       <div class="cards" id="demandCards"></div>
@@ -757,142 +755,313 @@
   <div class="toast" id="submitToast">✅ Request submitted successfully!</div>
 
   <script>
-  /* ===== Drawer ===== */
-  const drawer = document.getElementById("drawer");
-  const drawerBackdrop = document.getElementById("drawerBackdrop");
-  function toggleDrawer(open){
-    drawer.classList.toggle("open", !!open);
-    drawerBackdrop.classList.toggle("show", !!open);
-  }
-  
-  /* ===== Modals ===== */
-  function openModal(id){
-    document.getElementById(id).classList.add("show");
-    document.body.style.overflow = "hidden";
-    if (id === "giveRentModal") loadDemandCards(30);
-  }
-  function closeModal(id){
-    document.getElementById(id).classList.remove("show");
-    document.body.style.overflow = "";
-  }
-  
-  /* ===== Toast ===== */
-  const submitToast = document.getElementById("submitToast");
-  let toastTimer = null;
-  function showToast(msg){
-    submitToast.textContent = msg;
-    submitToast.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => submitToast.classList.remove("show"), 2200);
-  }
-  
-  /* ===== Script URL ===== */
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTVjVrVwALfO9RaxR--LxD1XymlLfsP-LSNiMq9o3rhaz5wxbd5ciD9fWzhYMqO9y6/exec";
-  
-  /* ===== Require Auth ===== */
-   function requireAuth(callback) {
-    const user = window.firebaseAuthCurrentUser?.();
-    if (!user) {
-      window.location.href = "login.html?redirect=index.html";
-      return;
+    /* ===== Drawer ===== */
+    const drawer = document.getElementById("drawer");
+    const drawerBackdrop = document.getElementById("drawerBackdrop");
+    function toggleDrawer(open){
+      drawer.classList.toggle("open", !!open);
+      drawerBackdrop.classList.toggle("show", !!open);
     }
-    callback();
-  }
 
-  /* ===== Offer Rent ===== */
-  async function offerRent(requestId, buttonEl) {
-    try {
+    /* ===== Account dropdown toggle ===== */
+    const accountBtn = document.getElementById("accountBtn");
+    const accountDropdown = document.getElementById("accountDropdown");
+    const accountBox = document.getElementById("accountBox");
+
+    accountBtn.addEventListener("click", (e) => {
+      // If logged out, accountBtn gets onclick redirect from auth listener
+      // So only toggle dropdown if logged in
+      const user = window.firebaseAuthCurrentUser?.();
+      if (!user) return;
+
+      e.stopPropagation();
+      accountDropdown.style.display = (accountDropdown.style.display === "block") ? "none" : "block";
+    });
+
+    window.addEventListener("click", (e) => {
+      if (!accountBox.contains(e.target)) {
+        accountDropdown.style.display = "none";
+      }
+    });
+
+    /* ===== Modals ===== */
+    function openModal(id){
+      document.getElementById(id).classList.add("show");
+      document.body.style.overflow = "hidden";
+      if (id === "giveRentModal") loadDemandCards(30);
+    }
+    function closeModal(id){
+      document.getElementById(id).classList.remove("show");
+      document.body.style.overflow = "";
+    }
+
+    /* ===== Toast ===== */
+    const submitToast = document.getElementById("submitToast");
+    let toastTimer = null;
+    function showToast(msg){
+      submitToast.textContent = msg;
+      submitToast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => submitToast.classList.remove("show"), 2200);
+    }
+
+    /* ===== Script URL ===== */
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTVjVrVwALfO9RaxR--LxD1XymlLfsP-LSNiMq9o3rhaz5wxbd5ciD9fWzhYMqO9y6/exec";
+
+    /* ===== Require Auth (redirect to login page) ===== */
+    function requireAuth(callback) {
       const user = window.firebaseAuthCurrentUser?.();
       if (!user) {
-        openModal("authModal");
+        window.location.href = "login.html?redirect=index.html";
         return;
       }
-  
-      buttonEl.textContent = "Offering...";
-      buttonEl.disabled = true;
-  
-      const res = await fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          action: "createDeal",
-          requestId,
-          ownerUid: user.uid,
-          ownerEmail: user.email
-        })
-      });
-  
-      const result = await res.json();
-  
-      if (!result.ok) throw new Error(result.error || "Failed");
-  
-      showToast("✅ Offer sent!");
-      setTimeout(() => loadDemandCards(30), 500);
-  
-    } catch (err) {
-      showToast("❌ Offer failed");
-      buttonEl.textContent = "Offer Rent";
-      buttonEl.disabled = false;
+      callback();
     }
-  }
-  
-  /* ===== Load Demand Cards (JSONP) ===== */
-  function loadDemandCards(limit = 30) {
-    const el = document.getElementById("demandCards");
-    el.innerHTML = "Loading...";
-  
-    const cbName = "demandCb_" + Date.now();
-  
-    window[cbName] = function(payload) {
-      delete window[cbName];
-  
-      if (!payload || !payload.ok) {
-        el.innerHTML = "Failed to load.";
-        return;
+
+    /* ===== Offer Rent ===== */
+    async function offerRent(requestId, buttonEl) {
+      try {
+        const user = window.firebaseAuthCurrentUser?.();
+        if (!user) {
+          window.location.href = "login.html?redirect=index.html";
+          return;
+        }
+
+        buttonEl.textContent = "Offering...";
+        buttonEl.disabled = true;
+        buttonEl.classList.add("disabled");
+
+        const res = await fetch(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action: "createDeal",
+            requestId: String(requestId),
+            ownerUid: user.uid,
+            ownerEmail: user.email
+          })
+        });
+
+        const txt = await res.text();
+        let result = null;
+        try { result = JSON.parse(txt); } catch(e) { result = null; }
+
+        if (!result || !result.ok) throw new Error(result?.error || "Failed");
+
+        showToast("✅ Offer sent!");
+        setTimeout(() => loadDemandCards(30), 500);
+
+      } catch (err) {
+        console.error(err);
+        showToast("❌ Offer failed");
+        buttonEl.textContent = "Offer Rent";
+        buttonEl.disabled = false;
+        buttonEl.classList.remove("disabled");
       }
-  
-      const rows = payload.rows || [];
-      if (!rows.length) {
-        el.innerHTML = "No requests yet.";
-        return;
-      }
-  
-      el.innerHTML = "";
-  
-      rows.forEach(d => {
-        const div = document.createElement("div");
-        div.className = "card";
-  
-        div.innerHTML = `
-          <div class="meta">
-            <span>${d.state} • ${d.city}</span>
-            <span>${d.propertyType}</span>
-          </div>
-          <strong>Budget: RM ${d.budget}</strong>
-          <div style="margin-top:6px;font-size:13px;">
-            Duration: ${d.duration} • People: ${d.people}
-          </div>
-          <div style="margin-top:8px;">
-            <span class="pill">Status: ${d.status}</span>
-          </div>
-          <div class="card-actions">
-            <button class="btn primary small" data-id="${d.requestId}">
-              Offer Rent
-            </button>
-          </div>
-        `;
-  
-        const btn = div.querySelector("button");
-        btn.onclick = () => requireAuth(() => offerRent(d.requestId, btn));
-  
-        el.appendChild(div);
-      });
+    }
+
+    /* ===== Load Demand Cards (JSONP) ===== */
+    function loadDemandCards(limit = 30) {
+      const el = document.getElementById("demandCards");
+      el.innerHTML = "Loading...";
+
+      const cbName = "demandCb_" + Date.now();
+
+      window[cbName] = function(payload) {
+        delete window[cbName];
+
+        if (!payload || !payload.ok) {
+          el.innerHTML = "Failed to load.";
+          return;
+        }
+
+        const rows = payload.rows || [];
+        if (!rows.length) {
+          el.innerHTML = "No requests yet.";
+          return;
+        }
+
+        el.innerHTML = "";
+
+        rows.forEach(d => {
+          const offered = String(d.status || "").toLowerCase() === "offered";
+
+          const div = document.createElement("div");
+          div.className = "card";
+
+          div.innerHTML = `
+            <div class="meta">
+              <span>${d.state || "-"} • ${d.city || "-"}</span>
+              <span>${d.propertyType || "-"}</span>
+            </div>
+            <strong>Budget: RM ${d.budget || "-"}</strong>
+            <div style="margin-top:6px;font-size:13px;color:#444;">
+              Duration: ${d.duration || "-"} • People: ${d.people || "-"}
+            </div>
+            <div style="margin-top:8px;">
+              <span class="pill">Status: ${d.status || "Open"}</span>
+            </div>
+            <div class="card-actions">
+              <button class="btn primary small ${offered ? "disabled" : ""}" ${offered ? "disabled" : ""}>
+                ${offered ? "Already Offered" : "Offer Rent"}
+              </button>
+            </div>
+          `;
+
+          const btn = div.querySelector("button");
+          btn.onclick = () => {
+            if (offered) return;
+            requireAuth(() => offerRent(d.requestId, btn));
+          };
+
+          el.appendChild(div);
+        });
+      };
+
+      // remove previous jsonp scripts
+      document.querySelectorAll("script[data-jsonp='demand']").forEach(s => s.remove());
+
+      const script = document.createElement("script");
+      script.dataset.jsonp = "demand";
+      script.src = `${SCRIPT_URL}?action=list&limit=${encodeURIComponent(limit)}&callback=${encodeURIComponent(cbName)}&_ts=${Date.now()}`;
+      script.onerror = () => el.innerHTML = "Failed to load data.";
+      document.body.appendChild(script);
+      script.onload = () => script.remove();
+    }
+
+    /* ===== City options (keep yours) ===== */
+    const cityOptions = {
+      "Johor": ["Kluang", "Kulai", "Tangkak", "Masai", "Parit Jawa", "Batu Pahat", "Ulu Tiram", "Mersing", "Johor Baharu", "Kota Tinggi"],
+      "Kedah": ["Alor Setar", "Langkawi", "Sungai Petan", "Baling", "Changloon", "Kodiang", "Jitra", "Kulim", "Pendang", "Serdang"],
+      "Kelantan": ["Kota Bharu", "Dabong", "Jelawat", "Ketereh", "Kuala Krai", "Kubang Kerian", "Machang", "Pasir Mas", "Pengkalan Chepa", "Pengkalan Kubor", "Pengkalan Pasir", "Perupok", "Wakaf Bharu", "Wakaf Che Yeh"],
+      "Melaka": ["Ayer Keroh", "Alor Gajah", "Asahan", "Ayer Paabas", "Batu Berendam", "Bemban", "Jasin", "Klebang", "Lendu, Alor Gajah", "Lubuk China", "Machap Baru", "Paya Rumput", "Pokok Mangga", "Simpang Ampat", "Telok Gong", "Telok Mas"],
+      "Negeri Sembilan": ["Air Kuning Selatan", "Ampang Tinggi", "Bahau", "Bandar Baru Nilai", "Bandar Seri Jempol", "Batang Benar", "Batu Kikir", "Gemas", "Kota", "Kuala Pilah", "Kuala Sawah", "Lukut", "Mambau", "Nilai", "Pajam", "Pasir Panjang", "Pengkalan Kempas", "Port Dickson", "Rembau", "Rompin", "Senawang", "Seremban 2", "Seremban 3", "Seri Menanti", "Serting", "Sikamat", "Siliau", "Simpang Durian", "Simpang Pertang", "Sungai Gadut", "Sungai Muntoh", "Tampin", "Tanjung Ipoh", "Teluk Kemang", "Tiroi"],
+      "Pahang": ["Bandar Bera", "Bandar Muadzam Shah", "Bandar Tun Razak", "Bentong", "Gambang", "Gebeng", "Genting Highlands", "Jerantut", "Karak", "Kuantan", "Mentakab", "Pekan", "Raub", "Tanah Rata", "Temerloh"],
+      "Penang": ["Bukit Mertajam", "Balik Pulau", "Batu Kawan", "Bayan Lepas", "Butterworth", "Kepala Batas", "Nibong Tebal", "Perai", "Permatang Pauh", "Simpang Ampat", "Tasek Gelugor"],
+      "Perak": ["Sungai Siput", "Ipoh", "Taiping", "Gopeng", "Gerik", "Chemor", "Lumut", "Kuala Kangsar", "Tanjong Malim"],
+      "Perlis": ["Kangar", "Padang Besar", "Kaki Bukit", "Kuala Perlis"],
+      "Sabah": ["Ranau", "Kota Kinabalu", "Sandakan", "Tamparuli", "Tuaran", "Penampang", "Lahad Datu", "Semporna", "Tawau", "Kota Belud"],
+      "Sarawak": ["Miri", "Kuching", "Niah", "Bau", "Bintulu", "Kota Samarahan", "Sibu", "Limbang", "Lundu"],
+      "Selangor": ["Petaling Jaya", "Shah Alam", "Ampang", "Rawang", "Gombak", "Semenyih", "Hulu Langat", "Ampang Jaya", "Seri Kembangan", "Kuala Kubu Bharu"],
     };
-  
-    const script = document.createElement("script");
-    script.src = `${SCRIPT_URL}?action=list&limit=${limit}&callback=${cbName}`;
-    script.onerror = () => el.innerHTML = "Failed to load data.";
-    document.body.appendChild(script);
-  }
+
+    document.getElementById("state").addEventListener("change", function() {
+      const state = this.value;
+      const citySelect = document.getElementById("city");
+      citySelect.innerHTML = "<option value=''>Select City</option>";
+      (cityOptions[state] || []).forEach(city => {
+        const option = document.createElement("option");
+        option.value = city;
+        option.textContent = city;
+        citySelect.appendChild(option);
+      });
+    });
+
+    /* ===== Budget slider ===== */
+    const minSlider = document.getElementById("minBudget");
+    const maxSlider = document.getElementById("maxBudget");
+    const budgetText = document.getElementById("budgetText");
+    const budgetHidden = document.getElementById("budgetHidden");
+
+    function formatRM(n) {
+      return "RM " + Number(n).toLocaleString("en-MY");
+    }
+
+    function syncBudget() {
+      let minVal = Number(minSlider.value);
+      let maxVal = Number(maxSlider.value);
+      if (minVal > maxVal) [minVal, maxVal] = [maxVal, minVal];
+      budgetText.textContent = `${formatRM(minVal)} – ${formatRM(maxVal)}`;
+      budgetHidden.value = `${minVal} - ${maxVal}`;
+    }
+    minSlider.addEventListener("input", syncBudget);
+    maxSlider.addEventListener("input", syncBudget);
+    syncBudget();
+
+    /* ===== People stepper ===== */
+    const peopleMinus = document.getElementById("peopleMinus");
+    const peoplePlus  = document.getElementById("peoplePlus");
+    const peopleValue = document.getElementById("peopleValue");
+    const peopleHidden = document.getElementById("peopleHidden");
+    let peopleCount = 1;
+    function syncPeople(){
+      peopleValue.textContent = String(peopleCount);
+      peopleHidden.value = String(peopleCount);
+    }
+    peopleMinus.addEventListener("click", () => { peopleCount = Math.max(1, peopleCount - 1); syncPeople(); });
+    peoplePlus.addEventListener("click", () => { peopleCount = Math.min(20, peopleCount + 1); syncPeople(); });
+    syncPeople();
+
+    /* ===== Needs chips ===== */
+    const needsHidden = document.getElementById("needsHidden");
+    const needsChips = document.getElementById("needsChips");
+    function syncNeeds(){
+      const selected = [...needsChips.querySelectorAll("input[type='checkbox']:checked")].map(x => x.value);
+      needsHidden.value = selected.join(", ");
+    }
+    needsChips.addEventListener("change", syncNeeds);
+    syncNeeds();
+
+    /* ===== Occupation Other ===== */
+    const occupationSelect = document.getElementById("occupationSelect");
+    const occupationOtherWrap = document.getElementById("occupationOtherWrap");
+    const occupationOtherInput = document.getElementById("occupationOtherInput");
+    const occupationHidden = document.getElementById("occupationHidden");
+    function syncOccupation(){
+      const val = occupationSelect.value;
+      if (val === "Other") {
+        occupationOtherWrap.style.display = "block";
+        occupationHidden.value = (occupationOtherInput.value || "").trim();
+      } else {
+        occupationOtherWrap.style.display = "none";
+        occupationHidden.value = val;
+      }
+    }
+    occupationSelect.addEventListener("change", () => {
+      syncOccupation();
+      if (occupationSelect.value === "Other") occupationOtherInput.focus();
+    });
+    occupationOtherInput.addEventListener("input", syncOccupation);
+    syncOccupation();
+
+    /* ===== Submit Request ===== */
+    document.getElementById("requestForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const form = this;
+
+      syncOccupation();
+      if (occupationSelect.value === "Other" && !occupationHidden.value.trim()) {
+        showToast("Please type your occupation.");
+        occupationOtherInput.focus();
+        return;
+      }
+
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(data) })
+        .then(res => res.text())
+        .then(() => {
+          showToast("✅ Request submitted successfully!");
+          form.reset();
+
+          // reset occupation
+          occupationOtherWrap.style.display = "none";
+          occupationOtherInput.value = "";
+          syncOccupation();
+
+          // reset people + needs
+          peopleCount = 1; syncPeople();
+          [...needsChips.querySelectorAll("input[type='checkbox']")].forEach(cb => cb.checked = false);
+          syncNeeds();
+
+          // reset budget
+          minSlider.value = 500;
+          maxSlider.value = 1500;
+          syncBudget();
+
+          closeModal("requestModal");
+        })
+        .catch(() => alert("Submission failed. Please try again."));
+    });
   </script>
 </body>
 </html>
