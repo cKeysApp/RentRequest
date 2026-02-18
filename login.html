@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Login | cKeys</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#f5f7fa;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+    }
+    .box{
+      width:100%;
+      max-width:400px;
+      background:#fff;
+      padding:30px;
+      border-radius:16px;
+      box-shadow:0 20px 40px rgba(0,0,0,.1);
+    }
+    h2{
+      margin-top:0;
+      text-align:center;
+    }
+    input{
+      width:100%;
+      padding:12px;
+      margin-bottom:12px;
+      border-radius:8px;
+      border:1px solid #ccc;
+    }
+    button{
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      font-weight:bold;
+      cursor:pointer;
+      margin-bottom:10px;
+    }
+    .primary{
+      background:#28a745;
+      color:#fff;
+    }
+    .google{
+      background:#000;
+      color:#fff;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Login / Register</h2>
+
+  <button class="google" onclick="loginWithGoogle()">
+    Continue with Google
+  </button>
+
+  <div style="text-align:center;margin:10px 0;color:#666;">OR</div>
+
+  <input type="email" id="email" placeholder="Email">
+  <input type="password" id="password" placeholder="Password">
+
+  <button class="primary" onclick="loginWithEmail()">
+    Login
+  </button>
+
+  <button onclick="registerWithEmail()">
+    Register
+  </button>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCvyIV4XSWzGnMzMhgJBYAPRbf8NB2NYCg",
+    authDomain: "find-rental-f7694.firebaseapp.com",
+    projectId: "find-rental-f7694",
+    appId: "1:6641924981:web:9dfaf299e16108a97d713c"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  function redirectAfterLogin() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get("redirect") || "index.html";
+    window.location.href = redirect;
+  }
+
+  window.loginWithGoogle = async function() {
+    await signInWithPopup(auth, provider);
+    redirectAfterLogin();
+  };
+
+  window.loginWithEmail = async function() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    await signInWithEmailAndPassword(auth, email, password);
+    redirectAfterLogin();
+  };
+
+  window.registerWithEmail = async function() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    await createUserWithEmailAndPassword(auth, email, password);
+    redirectAfterLogin();
+  };
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) redirectAfterLogin();
+  });
+</script>
+
+</body>
+</html>
