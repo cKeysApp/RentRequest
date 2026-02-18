@@ -449,7 +449,40 @@
     }
   </style>
 </head>
-
+  <div class="modal" id="authModal">
+    <div class="overlay" onclick="closeModal('authModal')"></div>
+    <div class="box">
+      <header>
+        <h2>Login / Register</h2>
+        <button class="close" onclick="closeModal('authModal')">✕</button>
+      </header>
+  
+      <button class="btn primary" onclick="loginWithGoogle()" style="width:100%;margin-bottom:12px;">
+        Continue with Google
+      </button>
+  
+      <div style="margin:10px 0;text-align:center;color:#666;">OR</div>
+  
+      <input type="email" id="authEmail" placeholder="Email">
+      <input type="password" id="authPassword" placeholder="Password">
+  
+      <button class="btn primary" style="width:100%;margin-top:10px;"
+        onclick="loginWithEmail(
+          document.getElementById('authEmail').value,
+          document.getElementById('authPassword').value
+        )">
+        Login
+      </button>
+  
+      <button class="btn" style="width:100%;margin-top:10px;"
+        onclick="registerWithEmail(
+          document.getElementById('authEmail').value,
+          document.getElementById('authPassword').value
+        )">
+        Register
+      </button>
+    </div>
+  </div>
 <body>
   <!-- Drawer + backdrop -->
   <div class="drawer" id="drawer">
@@ -1105,39 +1138,5 @@
       script.onload = () => script.remove();
     }
   </script>
-  <div class="modal" id="authModal">
-    <div class="overlay" onclick="closeModal('authModal')"></div>
-    <div class="box">
-      <header>
-        <h2>Login / Register</h2>
-        <button class="close" onclick="closeModal('authModal')">✕</button>
-      </header>
-  
-      <button class="btn primary" onclick="loginWithGoogle()" style="width:100%;margin-bottom:12px;">
-        Continue with Google
-      </button>
-  
-      <div style="margin:10px 0;text-align:center;color:#666;">OR</div>
-  
-      <input type="email" id="authEmail" placeholder="Email">
-      <input type="password" id="authPassword" placeholder="Password">
-  
-      <button class="btn primary" style="width:100%;margin-top:10px;"
-        onclick="loginWithEmail(
-          document.getElementById('authEmail').value,
-          document.getElementById('authPassword').value
-        )">
-        Login
-      </button>
-  
-      <button class="btn" style="width:100%;margin-top:10px;"
-        onclick="registerWithEmail(
-          document.getElementById('authEmail').value,
-          document.getElementById('authPassword').value
-        )">
-        Register
-      </button>
-    </div>
-  </div>
 </body>
 </html>
